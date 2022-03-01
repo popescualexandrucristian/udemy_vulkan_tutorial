@@ -55,6 +55,11 @@
     <IncludePath>$(ProjectDir)\external\glm;$(ProjectDir)\external\glfw\include;$(VULKAN_SDK)\Include;$(IncludePath)</IncludePath>
     <EnableMicrosoftCodeAnalysis>false</EnableMicrosoftCodeAnalysis>
   </PropertyGroup>
+  <PropertyGroup>
+     <IntDirSharingDetected>
+       None
+     </IntDirSharingDetected>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -93,6 +98,11 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="VulkanRenderer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="shaders_project.vcxproj">
+      <Project>{db032fb0-96f2-475d-9234-bd5e56658844}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

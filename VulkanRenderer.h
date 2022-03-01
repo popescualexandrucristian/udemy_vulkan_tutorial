@@ -25,6 +25,12 @@ struct SwapchainDetails
    std::vector<VkPresentModeKHR> supportedPresentationModes;
 };
 
+struct SwapchainImage
+{
+   VkImage image;
+   VkImageView imageView;
+};
+
 class VulkanRenderer
 {
 public:
@@ -46,6 +52,11 @@ private:
    uint32_t checkDeviceSutable(VkPhysicalDevice device) const;
    QueueFamilyIndices getQueueFamilyIndices(VkPhysicalDevice device) const;
    SwapchainDetails getSwapchainDetails(VkPhysicalDevice device, VkSurfaceKHR surface) const;
+   VkSurfaceFormatKHR selectBestSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats) const;
+   VkPresentModeKHR selectBestPresentationMode(const std::vector<VkPresentModeKHR>& presentationModes) const;
+   VkExtent2D selectBestResolution(GLFWwindow* window, VkSurfaceCapabilitiesKHR surfaceCapabilityes) const;
+   void createSwapChain();
+   VkImageView createImageView(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags) const;
 
    GLFWwindow* window = nullptr;
    VkInstance instance = VK_NULL_HANDLE;
@@ -59,4 +70,8 @@ private:
    VkQueue presentationQueue = VK_NULL_HANDLE;
    VkSurfaceKHR surface = VK_NULL_HANDLE;
    VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
+   VkSwapchainKHR swapChain = VK_NULL_HANDLE;
+   std::vector<SwapchainImage> swapChainImages;
+   VkExtent2D currentResolution = {};
+   VkSurfaceFormatKHR currentSurfaceFormat = { VK_FORMAT_UNDEFINED, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
 };

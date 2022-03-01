@@ -7,4 +7,18 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="VulkanRenderer.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <Filter Include="shaders">
+      <UniqueIdentifier>{9c509c0e-367c-42f5-9c19-1ac0710a7e03}</UniqueIdentifier>
+      <Extensions>frag;vert</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\*">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\*">
+      <Filter>shaders</Filter>
+    </None>
+  </ItemGroup>
 </Project>

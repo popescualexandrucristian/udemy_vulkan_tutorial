@@ -5,16 +5,28 @@ VisualStudioVersion = 16.0.32126.315
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vulkan_course_app", "vulkan_course_app.vcxproj", "{37DB17A8-4D14-4087-85DD-97F940891ADA}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shaders_project", "shaders_project.vcxproj", "{DB032FB0-96F2-475D-9234-BD5E56658844}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
 		Release|x64 = Release|x64
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{37DB17A8-4D14-4087-85DD-97F940891ADA}.Debug|x64.ActiveCfg = Debug|x64
 		{37DB17A8-4D14-4087-85DD-97F940891ADA}.Debug|x64.Build.0 = Debug|x64
+		{37DB17A8-4D14-4087-85DD-97F940891ADA}.Debug|x86.ActiveCfg = Debug|x64
 		{37DB17A8-4D14-4087-85DD-97F940891ADA}.Release|x64.ActiveCfg = Release|x64
 		{37DB17A8-4D14-4087-85DD-97F940891ADA}.Release|x64.Build.0 = Release|x64
+		{37DB17A8-4D14-4087-85DD-97F940891ADA}.Release|x86.ActiveCfg = Release|x64
+		{DB032FB0-96F2-475D-9234-BD5E56658844}.Debug|x64.ActiveCfg = Debug|x64
+		{DB032FB0-96F2-475D-9234-BD5E56658844}.Debug|x64.Build.0 = Debug|x64
+		{DB032FB0-96F2-475D-9234-BD5E56658844}.Debug|x86.ActiveCfg = Debug|x64
+		{DB032FB0-96F2-475D-9234-BD5E56658844}.Release|x64.ActiveCfg = Release|x64
+		{DB032FB0-96F2-475D-9234-BD5E56658844}.Release|x64.Build.0 = Release|x64
+		{DB032FB0-96F2-475D-9234-BD5E56658844}.Release|x86.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
