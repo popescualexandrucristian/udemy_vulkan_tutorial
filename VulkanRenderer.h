@@ -57,6 +57,9 @@ private:
    VkExtent2D selectBestResolution(GLFWwindow* window, VkSurfaceCapabilitiesKHR surfaceCapabilityes) const;
    void createSwapChain();
    VkImageView createImageView(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags) const;
+   VkShaderModule createShaderModule(VkDevice device, const std::vector<char>& code) const;
+   void createRenderPass();
+   void createGraphicsPipeline();
 
    GLFWwindow* window = nullptr;
    VkInstance instance = VK_NULL_HANDLE;
@@ -74,4 +77,7 @@ private:
    std::vector<SwapchainImage> swapChainImages;
    VkExtent2D currentResolution = {};
    VkSurfaceFormatKHR currentSurfaceFormat = { VK_FORMAT_UNDEFINED, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
+   VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+   VkRenderPass renderPass = VK_NULL_HANDLE;
+   VkPipeline graphicsPipeline = VK_NULL_HANDLE;
 };

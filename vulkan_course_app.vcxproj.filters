@@ -2,10 +2,12 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClInclude Include="VulkanRenderer.h" />
+    <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="VulkanRenderer.cpp" />
+    <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="shaders">
@@ -14,7 +16,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="shaders\*">
+    <None Include="shaders\shader.vert">
       <Filter>shaders</Filter>
     </None>
     <None Include="shaders\*">

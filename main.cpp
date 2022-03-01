@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "VulkanRenderer.h"
+#include "utils.h"
 
 GLFWwindow* createWindow(const std::string& name = "test window", const int width = 800, const int height = 600)
 {
