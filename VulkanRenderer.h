@@ -60,6 +60,10 @@ private:
    VkShaderModule createShaderModule(VkDevice device, const std::vector<char>& code) const;
    void createRenderPass();
    void createGraphicsPipeline();
+   void createFrameBuffers();
+   void createCommandPool();
+   void allocateCommandBuffers();
+   void recordCommandBuffers();
 
    GLFWwindow* window = nullptr;
    VkInstance instance = VK_NULL_HANDLE;
@@ -80,4 +84,7 @@ private:
    VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
    VkRenderPass renderPass = VK_NULL_HANDLE;
    VkPipeline graphicsPipeline = VK_NULL_HANDLE;
+   std::vector<VkFramebuffer> swapChainFramebuffers;
+   VkCommandPool graphicsCommandPool = VK_NULL_HANDLE;
+   std::vector<VkCommandBuffer> commandBuffers;
 };

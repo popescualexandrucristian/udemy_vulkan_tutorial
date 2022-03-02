@@ -13,6 +13,7 @@ int VulkanRenderer::init(GLFWwindow* window)
    this->window = window;
    try
    {
+      //setup
       createInstance();
       hookDebugMessager();
       creteSurface();
@@ -21,8 +22,14 @@ int VulkanRenderer::init(GLFWwindow* window)
       swapchainDetails = getSwapchainDetails(mainDevice.physicalDevice, surface);
       createLogicalDevice();// and logical queues
       createSwapChain(); // and swapchain images
+
+      //render something
       createRenderPass();
       createGraphicsPipeline();
+      createFrameBuffers();
+      createCommandPool();
+      allocateCommandBuffers();
+      recordCommandBuffers();
    }
    catch (const std::runtime_error& e)
    {
@@ -35,28 +42,40 @@ int VulkanRenderer::init(GLFWwindow* window)
 
 void VulkanRenderer::cleanup()
 {
+   if (graphicsCommandPool != VK_NULL_HANDLE)
+      vkDestroyCommandPool(mainDevice.logicalDevice, graphicsCommandPool, nullptr);
+
+   graphicsCommandPool = VK_NULL_HANDLE;
+
+   for (auto& framebuffer : swapChainFramebuffers)
+   {
+      vkDestroyFramebuffer(mainDevice.logicalDevice, framebuffer, nullptr);
+   }
+   swapChainFramebuffers.clear();
+
+   if (graphicsPipeline != VK_NULL_HANDLE)
+      vkDestroyPipeline(mainDevice.logicalDevice, graphicsPipeline, nullptr);
+
+   graphicsPipeline = VK_NULL_HANDLE;
+
+   if (pipelineLayout != VK_NULL_HANDLE)
+      vkDestroyPipelineLayout(mainDevice.logicalDevice, pipelineLayout, nullptr);
+
+   pipelineLayout = VK_NULL_HANDLE;
+
+   if (renderPass != VK_NULL_HANDLE)
+      vkDestroyRenderPass(mainDevice.logicalDevice, renderPass, nullptr);
+
+   renderPass = VK_NULL_HANDLE;
+
    for (auto& img : swapChainImages)
    {
-      if (graphicsPipeline != VK_NULL_HANDLE)
-         vkDestroyPipeline(mainDevice.logicalDevice, graphicsPipeline, nullptr);
-
-      graphicsPipeline = VK_NULL_HANDLE;
-
-      if (pipelineLayout != VK_NULL_HANDLE)
-         vkDestroyPipelineLayout(mainDevice.logicalDevice, pipelineLayout, nullptr);
-
-      pipelineLayout = VK_NULL_HANDLE;
-
-      if (renderPass != VK_NULL_HANDLE)
-         vkDestroyRenderPass(mainDevice.logicalDevice, renderPass, nullptr);
-
-      renderPass = VK_NULL_HANDLE;
-
       if (img.imageView != VK_NULL_HANDLE)
          vkDestroyImageView(mainDevice.logicalDevice, img.imageView, nullptr);
 
       img.imageView = VK_NULL_HANDLE;
    }
+   swapChainImages.clear();
 
    if (VK_NULL_HANDLE != swapChain)
       vkDestroySwapchainKHR(mainDevice.logicalDevice, swapChain, nullptr);
@@ -537,6 +556,90 @@ void VulkanRenderer::createRenderPass()
 
    if (VK_SUCCESS != vkCreateRenderPass(mainDevice.logicalDevice, &createInfo, nullptr, &renderPass))
       throw std::runtime_error("Failed to create render pass");
+}
+
+void VulkanRenderer::createFrameBuffers()
+{
+   swapChainFramebuffers.resize(swapChainImages.size());
+
+   for (size_t i = 0; i < swapChainFramebuffers.size(); ++i)
+   {
+      std::vector<VkImageView> attachments;
+      attachments.push_back(swapChainImages[i].imageView);
+
+      VkFramebufferCreateInfo createInfo = {};
+      createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+      createInfo.renderPass = renderPass;
+      createInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+      createInfo.pAttachments = attachments.data();
+      createInfo.width = currentResolution.width;
+      createInfo.height = currentResolution.height;
+      createInfo.layers = 1;
+
+      if (VK_SUCCESS != vkCreateFramebuffer(mainDevice.logicalDevice, &createInfo, nullptr, &swapChainFramebuffers[i]))
+         throw std::runtime_error("Unable to create framebuffer");
+   }
+}
+
+void VulkanRenderer::createCommandPool()
+{
+   VkCommandPoolCreateInfo createInfo = {};
+   createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+   createInfo.queueFamilyIndex = queueFamilyIndices.graphicFamily;
+   
+   if (VK_SUCCESS != vkCreateCommandPool(mainDevice.logicalDevice, &createInfo, nullptr, &graphicsCommandPool))
+      throw std::runtime_error("Unable to create the command pool");
+}
+
+void VulkanRenderer::allocateCommandBuffers()
+{
+   commandBuffers.resize(swapChainFramebuffers.size());
+
+   VkCommandBufferAllocateInfo allocInfo = {};
+   allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+   allocInfo.commandPool = graphicsCommandPool;
+   allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+   allocInfo.commandBufferCount = static_cast<uint32_t>(swapChainFramebuffers.size());
+
+   if (VK_SUCCESS != vkAllocateCommandBuffers(mainDevice.logicalDevice, &allocInfo, commandBuffers.data()))
+      throw std::runtime_error("Failed to allocate command buffers");
+}
+
+void VulkanRenderer::recordCommandBuffers()
+{
+   VkCommandBufferBeginInfo beginInfo = {};
+   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+
+   for (size_t i = 0; i < commandBuffers.size(); ++i)
+   {
+      if (VK_SUCCESS != vkBeginCommandBuffer(commandBuffers[i], &beginInfo))
+         throw std::runtime_error("Unable to begin recording command buffer");
+
+      VkRenderPassBeginInfo beginRenderPassInfo = {};
+      beginRenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+      beginRenderPassInfo.renderPass = renderPass;
+      beginRenderPassInfo.renderArea.offset = { 0,0 };
+      beginRenderPassInfo.renderArea.extent = currentResolution;
+      VkClearValue clearValues[] = {
+         { 0.6f, 0.65f, 0.4f, 1.0f }
+      };
+      beginRenderPassInfo.pClearValues = clearValues;
+      beginRenderPassInfo.clearValueCount = 1;
+      beginRenderPassInfo.framebuffer = swapChainFramebuffers[i];
+
+
+      vkCmdBeginRenderPass(commandBuffers[i], &beginRenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+      vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+
+      vkCmdDraw(commandBuffers[i], 3, 1, 0, 0);
+
+      vkCmdEndRenderPass(commandBuffers[i]);
+
+      if (VK_SUCCESS != vkEndCommandBuffer(commandBuffers[i]))
+         throw std::runtime_error("Unable to end recording command buffer");
+   }
 }
 
 VkShaderModule VulkanRenderer::createShaderModule(VkDevice device, const std::vector<char>& code) const
