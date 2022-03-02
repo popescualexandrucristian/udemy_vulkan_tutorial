@@ -30,6 +30,7 @@ int VulkanRenderer::init(GLFWwindow* window)
       createCommandPool();
       allocateCommandBuffers();
       recordCommandBuffers();
+      createSyncronization();
    }
    catch (const std::runtime_error& e)
    {
@@ -42,6 +43,19 @@ int VulkanRenderer::init(GLFWwindow* window)
 
 void VulkanRenderer::cleanup()
 {
+   vkQueueWaitIdle(graphicsQueue);
+   vkQueueWaitIdle(presentationQueue);
+
+   if (imageAvailable != VK_NULL_HANDLE)
+      vkDestroySemaphore(mainDevice.logicalDevice, imageAvailable, nullptr);
+
+   imageAvailable = VK_NULL_HANDLE;
+
+   if (renderFinished != VK_NULL_HANDLE)
+      vkDestroySemaphore(mainDevice.logicalDevice, renderFinished, nullptr);
+
+   renderFinished = VK_NULL_HANDLE;
+
    if (graphicsCommandPool != VK_NULL_HANDLE)
       vkDestroyCommandPool(mainDevice.logicalDevice, graphicsCommandPool, nullptr);
 
@@ -105,8 +119,49 @@ void VulkanRenderer::cleanup()
    instance = VK_NULL_HANDLE;
 }
 
+void VulkanRenderer::draw()
+{
+   //TODO recreate swapchain and framebuffers if needed here if the results are invalid
+
+   uint32_t imageIndex = 0;
+   VkResult aquieredImage = vkAcquireNextImageKHR(mainDevice.logicalDevice, swapChain, UINT64_MAX, imageAvailable, nullptr, &imageIndex);
+   if (VK_SUCCESS != aquieredImage)
+      throw std::runtime_error("Unable to get next swapchain image");
+
+   VkSubmitInfo submitInfo = {};
+   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+   
+   VkPipelineStageFlags waitStages = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+   submitInfo.pWaitSemaphores = &imageAvailable;
+   submitInfo.pWaitDstStageMask = &waitStages; //wait unit signaled
+   submitInfo.waitSemaphoreCount = 1;
+   
+   submitInfo.pCommandBuffers = &commandBuffers[imageIndex];
+   submitInfo.commandBufferCount = 1;
+
+   submitInfo.pSignalSemaphores = &renderFinished; // signaled when presented
+   submitInfo.signalSemaphoreCount = 1;
+
+   VkResult queueSubmited = vkQueueSubmit(graphicsQueue, 1, &submitInfo, nullptr);
+   if (VK_SUCCESS != queueSubmited)
+      throw std::runtime_error("Unable to submit");
+
+   VkPresentInfoKHR presentInfo = {};
+   presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+   presentInfo.pWaitSemaphores = &renderFinished;
+   presentInfo.waitSemaphoreCount = 1;
+   presentInfo.pSwapchains = &swapChain;
+   presentInfo.swapchainCount = 1;
+   presentInfo.pImageIndices = &imageIndex;
+
+   VkResult imagePresented = vkQueuePresentKHR(presentationQueue, &presentInfo);
+   if (VK_SUCCESS != imagePresented)
+      throw std::runtime_error("Unable to present image");
+}
+
 VulkanRenderer::~VulkanRenderer()
 {
+   cleanup();
 }
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
@@ -147,8 +202,7 @@ void VulkanRenderer::createInstance()
       extensionNames.push_back(extensionNamesGLFW[i]);
    createInfo.ppEnabledExtensionNames = extensionNames.data();
    createInfo.enabledExtensionCount = static_cast<uint32_t>(extensionNames.size());
-   if (!checkInstanceExtensionSupported(createInfo.ppEnabledExtensionNames, createInfo.enabledExtensionCount))
-      throw std::runtime_error("Not all the requested extensions are available");
+   checkInstanceExtensionSupported(createInfo.ppEnabledExtensionNames, createInfo.enabledExtensionCount);
 
 #ifdef ENABLE_VALIDATION
    const char* validationLayers = "VK_LAYER_KHRONOS_validation" ;
@@ -482,6 +536,7 @@ void VulkanRenderer::createGraphicsPipeline()
 
    //base
    createInfo.basePipelineHandle = nullptr; //pointer to a pass, only override values in the new pass
+   createInfo.basePipelineIndex = -1;
 
    if (VK_SUCCESS != vkCreateGraphicsPipelines(mainDevice.logicalDevice, nullptr, 1, &createInfo, nullptr, &graphicsPipeline))
       throw std::runtime_error("Failed to create pipeline");
@@ -537,6 +592,7 @@ void VulkanRenderer::createRenderPass()
    subpassDependencies[0].dstSubpass = 0; //indx in createInfo.pSubpasses
    subpassDependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
    subpassDependencies[0].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
+   subpassDependencies[0].dependencyFlags = 0;
 
 
    //VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL to VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
@@ -550,6 +606,7 @@ void VulkanRenderer::createRenderPass()
    subpassDependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
    subpassDependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
    subpassDependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
+   subpassDependencies[1].dependencyFlags = 0;
 
    createInfo.pDependencies = subpassDependencies.data();
    createInfo.dependencyCount = static_cast<uint32_t>(subpassDependencies.size());
@@ -603,6 +660,18 @@ void VulkanRenderer::allocateCommandBuffers()
 
    if (VK_SUCCESS != vkAllocateCommandBuffers(mainDevice.logicalDevice, &allocInfo, commandBuffers.data()))
       throw std::runtime_error("Failed to allocate command buffers");
+}
+
+void VulkanRenderer::createSyncronization()
+{
+   VkSemaphoreCreateInfo createInfo = {};
+   createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+   if (VK_SUCCESS != vkCreateSemaphore(mainDevice.logicalDevice, &createInfo, nullptr, &imageAvailable))
+      throw std::runtime_error("Unable to create semaphore");
+
+   if (VK_SUCCESS != vkCreateSemaphore(mainDevice.logicalDevice, &createInfo, nullptr, &renderFinished))
+      throw std::runtime_error("Unable to create semaphore");
 }
 
 void VulkanRenderer::recordCommandBuffers()
@@ -776,7 +845,7 @@ void VulkanRenderer::createSwapChain()
    }
 }
 
-bool VulkanRenderer::checkInstanceExtensionSupported(const char* const* extensionNames, size_t extensionCount) const
+void VulkanRenderer::checkInstanceExtensionSupported(const char* const* extensionNames, size_t extensionCount) const
 {
    uint32_t availableExtensionCount = 0;
 
@@ -789,20 +858,25 @@ bool VulkanRenderer::checkInstanceExtensionSupported(const char* const* extensio
    if (VK_SUCCESS != vkEnumerateInstanceExtensionProperties(nullptr, &availableExtensionCount, extensions.data()))
       throw std::runtime_error("Failed to get extension properties");
 
-   size_t foundExtensions = 0;
-   for (auto& availableExtension : extensions)
+   for (size_t i = 0; i < extensionCount; ++i)
    {
-      for (size_t extensionIndex = 0; extensionIndex < extensionCount; ++extensionIndex)
+      bool extensionFound = false;
+      for (auto& availableExtension : extensions)
       {
-         if (strcmp(extensionNames[extensionIndex], availableExtension.extensionName) == 0)
+         if (strcmp(extensionNames[i], availableExtension.extensionName) == 0)
          {
-            ++foundExtensions;
+            extensionFound = true;
             break;
          }
       }
-   }
 
-   return foundExtensions == extensionCount;
+      if (!extensionFound)
+      {
+         char exceptionString[1024] = {};
+         sprintf(exceptionString, "Missing extension : %s\n", extensionNames[i]);
+         throw std::runtime_error(exceptionString);
+      }
+   }
 }
 
 void VulkanRenderer::getPhysicalDevice()

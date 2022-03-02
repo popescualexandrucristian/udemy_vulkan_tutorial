@@ -22,7 +22,7 @@ void destroyWindow(GLFWwindow** window)
    glfwTerminate();
 }
 
-#ifdef NDEBUG
+#ifdef WINMAIN
 int WinMain()
 #else
 int main()
@@ -30,17 +30,19 @@ int main()
 {
    GLFWwindow* window = createWindow();
 
-   VulkanRenderer vulkanRenderer;
-   if (EXIT_FAILURE == vulkanRenderer.init(window))
-      return EXIT_FAILURE;
-   
-
-   while (!glfwWindowShouldClose(window))
    {
-      glfwPollEvents();
+      VulkanRenderer vulkanRenderer;
+      if (EXIT_FAILURE == vulkanRenderer.init(window))
+         return EXIT_FAILURE;
+
+
+      while (!glfwWindowShouldClose(window))
+      {
+         vulkanRenderer.draw();
+         glfwPollEvents();
+      }
    }
 
-   vulkanRenderer.cleanup();
    destroyWindow(&window);
    return EXIT_SUCCESS;
 }

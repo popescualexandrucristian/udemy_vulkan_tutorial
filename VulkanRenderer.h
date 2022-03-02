@@ -39,13 +39,15 @@ public:
    int init(GLFWwindow* window);
    void cleanup();
 
+   void draw();
+
    ~VulkanRenderer();
 
 private:
    void createInstance();
    void hookDebugMessager();
    void creteSurface();
-   bool checkInstanceExtensionSupported(const char* const* extensionNames, size_t extensionCount) const;
+   void checkInstanceExtensionSupported(const char* const* extensionNames, size_t extensionCount) const;
    void getPhysicalDevice();
    void createLogicalDevice();
    bool checkDeviceSwapChainSupport(VkPhysicalDevice device) const;
@@ -64,6 +66,7 @@ private:
    void createCommandPool();
    void allocateCommandBuffers();
    void recordCommandBuffers();
+   void createSyncronization();
 
    GLFWwindow* window = nullptr;
    VkInstance instance = VK_NULL_HANDLE;
@@ -87,4 +90,6 @@ private:
    std::vector<VkFramebuffer> swapChainFramebuffers;
    VkCommandPool graphicsCommandPool = VK_NULL_HANDLE;
    std::vector<VkCommandBuffer> commandBuffers;
+   VkSemaphore imageAvailable = VK_NULL_HANDLE;
+   VkSemaphore renderFinished = VK_NULL_HANDLE;
 };
