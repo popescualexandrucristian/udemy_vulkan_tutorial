@@ -10,6 +10,8 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm.hpp>
 
+const size_t MAX_NUMBER_OF_PROCCESSED_FRAMES_INFLIGHT = 2;
+
 struct QueueFamilyIndices
 {
    int32_t graphicFamily = -1;
@@ -90,6 +92,8 @@ private:
    std::vector<VkFramebuffer> swapChainFramebuffers;
    VkCommandPool graphicsCommandPool = VK_NULL_HANDLE;
    std::vector<VkCommandBuffer> commandBuffers;
-   VkSemaphore imageAvailable = VK_NULL_HANDLE;
-   VkSemaphore renderFinished = VK_NULL_HANDLE;
+   std::vector<VkSemaphore> imagesAvailable;
+   std::vector<VkFence> drawFences;
+   std::vector<VkSemaphore> rendersFinished;
+   size_t currentFrame = 0;
 };

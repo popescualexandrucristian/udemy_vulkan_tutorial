@@ -43,18 +43,28 @@ int VulkanRenderer::init(GLFWwindow* window)
 
 void VulkanRenderer::cleanup()
 {
-   vkQueueWaitIdle(graphicsQueue);
-   vkQueueWaitIdle(presentationQueue);
+   vkDeviceWaitIdle(mainDevice.logicalDevice);
 
-   if (imageAvailable != VK_NULL_HANDLE)
-      vkDestroySemaphore(mainDevice.logicalDevice, imageAvailable, nullptr);
+   for (size_t i = 0; i < drawFences.size(); ++i)
+   {
+      if (drawFences[i] != VK_NULL_HANDLE)
+         vkDestroyFence(mainDevice.logicalDevice, drawFences[i], nullptr);
+   }
+   drawFences.clear();
 
-   imageAvailable = VK_NULL_HANDLE;
+   for (size_t i = 0; i < imagesAvailable.size(); ++i)
+   {
+      if (imagesAvailable[i] != VK_NULL_HANDLE)
+         vkDestroySemaphore(mainDevice.logicalDevice, imagesAvailable[i], nullptr);
+   }
+   imagesAvailable.clear();
 
-   if (renderFinished != VK_NULL_HANDLE)
-      vkDestroySemaphore(mainDevice.logicalDevice, renderFinished, nullptr);
-
-   renderFinished = VK_NULL_HANDLE;
+   for (size_t i = 0; i < rendersFinished.size(); ++i)
+   {
+      if (rendersFinished[i] != VK_NULL_HANDLE)
+         vkDestroySemaphore(mainDevice.logicalDevice, rendersFinished[i], nullptr);
+   }
+   rendersFinished.clear();
 
    if (graphicsCommandPool != VK_NULL_HANDLE)
       vkDestroyCommandPool(mainDevice.logicalDevice, graphicsCommandPool, nullptr);
@@ -123,8 +133,20 @@ void VulkanRenderer::draw()
 {
    //TODO recreate swapchain and framebuffers if needed here if the results are invalid
 
+   if (VK_SUCCESS != vkWaitForFences(mainDevice.logicalDevice, 1, &drawFences[currentFrame % MAX_NUMBER_OF_PROCCESSED_FRAMES_INFLIGHT], VK_TRUE, UINT64_MAX))
+      throw std::runtime_error("Unable to get unused image");
+
+   if (VK_SUCCESS != vkResetFences(mainDevice.logicalDevice, 1, &drawFences[currentFrame % MAX_NUMBER_OF_PROCCESSED_FRAMES_INFLIGHT]))
+      throw std::runtime_error("Unable to reset fence for used image");
+
    uint32_t imageIndex = 0;
-   VkResult aquieredImage = vkAcquireNextImageKHR(mainDevice.logicalDevice, swapChain, UINT64_MAX, imageAvailable, nullptr, &imageIndex);
+   VkResult aquieredImage = vkAcquireNextImageKHR(
+      mainDevice.logicalDevice, 
+      swapChain, UINT64_MAX, 
+      imagesAvailable[currentFrame % MAX_NUMBER_OF_PROCCESSED_FRAMES_INFLIGHT], 
+      VK_NULL_HANDLE, 
+      &imageIndex);
+
    if (VK_SUCCESS != aquieredImage)
       throw std::runtime_error("Unable to get next swapchain image");
 
@@ -132,27 +154,29 @@ void VulkanRenderer::draw()
    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
    
    VkPipelineStageFlags waitStages = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-   submitInfo.pWaitSemaphores = &imageAvailable;
+   submitInfo.pWaitSemaphores = &imagesAvailable[currentFrame % MAX_NUMBER_OF_PROCCESSED_FRAMES_INFLIGHT];
    submitInfo.pWaitDstStageMask = &waitStages; //wait unit signaled
    submitInfo.waitSemaphoreCount = 1;
    
    submitInfo.pCommandBuffers = &commandBuffers[imageIndex];
    submitInfo.commandBufferCount = 1;
 
-   submitInfo.pSignalSemaphores = &renderFinished; // signaled when presented
+   submitInfo.pSignalSemaphores = &rendersFinished[currentFrame % MAX_NUMBER_OF_PROCCESSED_FRAMES_INFLIGHT]; // signaled when presented
    submitInfo.signalSemaphoreCount = 1;
 
-   VkResult queueSubmited = vkQueueSubmit(graphicsQueue, 1, &submitInfo, nullptr);
+   VkResult queueSubmited = vkQueueSubmit(graphicsQueue, 1, &submitInfo, drawFences[currentFrame % MAX_NUMBER_OF_PROCCESSED_FRAMES_INFLIGHT]);
    if (VK_SUCCESS != queueSubmited)
       throw std::runtime_error("Unable to submit");
 
    VkPresentInfoKHR presentInfo = {};
    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-   presentInfo.pWaitSemaphores = &renderFinished;
+   presentInfo.pWaitSemaphores = &rendersFinished[currentFrame % MAX_NUMBER_OF_PROCCESSED_FRAMES_INFLIGHT];
    presentInfo.waitSemaphoreCount = 1;
    presentInfo.pSwapchains = &swapChain;
    presentInfo.swapchainCount = 1;
    presentInfo.pImageIndices = &imageIndex;
+
+   ++currentFrame;
 
    VkResult imagePresented = vkQueuePresentKHR(presentationQueue, &presentInfo);
    if (VK_SUCCESS != imagePresented)
@@ -664,21 +688,36 @@ void VulkanRenderer::allocateCommandBuffers()
 
 void VulkanRenderer::createSyncronization()
 {
-   VkSemaphoreCreateInfo createInfo = {};
-   createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+   VkSemaphoreCreateInfo semaphoreCreateInfo = {};
+   semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-   if (VK_SUCCESS != vkCreateSemaphore(mainDevice.logicalDevice, &createInfo, nullptr, &imageAvailable))
-      throw std::runtime_error("Unable to create semaphore");
+   VkFenceCreateInfo fenceCreateInfo = {};
+   fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+   fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-   if (VK_SUCCESS != vkCreateSemaphore(mainDevice.logicalDevice, &createInfo, nullptr, &renderFinished))
-      throw std::runtime_error("Unable to create semaphore");
+   imagesAvailable.resize(MAX_NUMBER_OF_PROCCESSED_FRAMES_INFLIGHT);
+   rendersFinished.resize(MAX_NUMBER_OF_PROCCESSED_FRAMES_INFLIGHT);
+   for (size_t i = 0; i < MAX_NUMBER_OF_PROCCESSED_FRAMES_INFLIGHT; ++i)
+   {
+      if (VK_SUCCESS != vkCreateSemaphore(mainDevice.logicalDevice, &semaphoreCreateInfo, nullptr, &imagesAvailable[i]))
+         throw std::runtime_error("Unable to create image semaphore");
+
+      if (VK_SUCCESS != vkCreateSemaphore(mainDevice.logicalDevice, &semaphoreCreateInfo, nullptr, &rendersFinished[i]))
+         throw std::runtime_error("Unable to create render semaphore");
+   }
+
+   drawFences.resize(MAX_NUMBER_OF_PROCCESSED_FRAMES_INFLIGHT);
+   for (size_t i = 0; i < MAX_NUMBER_OF_PROCCESSED_FRAMES_INFLIGHT; ++i)
+   {
+      if (VK_SUCCESS != vkCreateFence(mainDevice.logicalDevice, &fenceCreateInfo, nullptr, &drawFences[i]))
+         throw std::runtime_error("Unable to create fence");
+   }
 }
 
 void VulkanRenderer::recordCommandBuffers()
 {
    VkCommandBufferBeginInfo beginInfo = {};
    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
    for (size_t i = 0; i < commandBuffers.size(); ++i)
    {
