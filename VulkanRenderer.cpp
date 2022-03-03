@@ -3,6 +3,7 @@
 
 #include <map>
 #include <set>
+#include <array>
 
 VulkanRenderer::VulkanRenderer()
 {
@@ -23,13 +24,23 @@ int VulkanRenderer::init(GLFWwindow* window)
       createLogicalDevice();// and logical queues
       createSwapChain(); // and swapchain images
 
+      std::vector<Vertex> firstMeshVertices = {
+         {{ 0.4, -0.4, 0.0}, {1.0, 0.0, 0.0} },
+         {{ 0.4,  0.4, 0.0}, {0.0, 1.0, 0.0} },
+         {{-0.4,  0.4, 0.0}, {0.0, 0.0, 1.0} },
+         {{ 0.4, -0.4, 0.0}, {1.0, 0.0, 0.0} },
+         {{-0.4,  0.4, 0.0}, {0.0, 0.0, 1.0} },
+         {{-0.4, -0.4, 0.0}, {0.0, 0.0, 0.0} },
+      };
+
+      firstMesh = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, firstMeshVertices);
+
       //render something
       createRenderPass();
       createGraphicsPipeline();
       createFrameBuffers();
       createCommandPool();
       allocateCommandBuffers();
-      recordCommandBuffers();
       createSyncronization();
    }
    catch (const std::runtime_error& e)
@@ -38,12 +49,16 @@ int VulkanRenderer::init(GLFWwindow* window)
       return EXIT_FAILURE;
    }
 
+   recordCommandBuffers();
+
    return EXIT_SUCCESS;
 }
 
 void VulkanRenderer::cleanup()
 {
    vkDeviceWaitIdle(mainDevice.logicalDevice);
+
+   firstMesh.clean();
 
    for (size_t i = 0; i < drawFences.size(); ++i)
    {
@@ -460,9 +475,34 @@ void VulkanRenderer::createGraphicsPipeline()
    createInfo.stageCount = 2;
 
    //vertex input
-   //TODO: Add proper vertex inputs
+
+   VkVertexInputBindingDescription bindingDescription = {};
+   bindingDescription.binding = 0;
+   bindingDescription.stride = sizeof(Vertex);
+   bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+   std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
+
+   VkVertexInputAttributeDescription positionVertexAttributeDescription = {};
+   positionVertexAttributeDescription.binding = 0; //match bindingDescription.binding
+   positionVertexAttributeDescription.location = 0; // layout location in shader
+   positionVertexAttributeDescription.format = VK_FORMAT_R32G32B32_SFLOAT;
+   positionVertexAttributeDescription.offset = offsetof(Vertex, Vertex::position);
+   attributeDescriptions.push_back(positionVertexAttributeDescription);
+
+   VkVertexInputAttributeDescription colorVertexAttributeDescription = {};
+   colorVertexAttributeDescription.binding = 0; //match bindingDescription.binding
+   colorVertexAttributeDescription.location = 1; // layout location in shader
+   colorVertexAttributeDescription.format = VK_FORMAT_R32G32B32_SFLOAT;
+   colorVertexAttributeDescription.offset = offsetof(Vertex, Vertex::color);
+   attributeDescriptions.push_back(colorVertexAttributeDescription);
+
    VkPipelineVertexInputStateCreateInfo vertexInputCreateInfo = {};
    vertexInputCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+   vertexInputCreateInfo.vertexBindingDescriptionCount = 1;
+   vertexInputCreateInfo.pVertexBindingDescriptions = &bindingDescription;
+   vertexInputCreateInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+   vertexInputCreateInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
    createInfo.pVertexInputState = &vertexInputCreateInfo;
 
    //input assembly
@@ -741,7 +781,11 @@ void VulkanRenderer::recordCommandBuffers()
 
       vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
-      vkCmdDraw(commandBuffers[i], 3, 1, 0, 0);
+      VkDeviceSize offsets[] = { 0 };
+      VkBuffer buffers[] = { firstMesh.getVertexBuffer() };
+      vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, buffers, offsets);
+
+      vkCmdDraw(commandBuffers[i], firstMesh.getVertexCount(), 1, 0, 0);
 
       vkCmdEndRenderPass(commandBuffers[i]);
 

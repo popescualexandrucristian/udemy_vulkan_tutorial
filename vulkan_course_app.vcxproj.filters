@@ -3,11 +3,13 @@
   <ItemGroup>
     <ClInclude Include="VulkanRenderer.h" />
     <ClInclude Include="utils.h" />
+    <ClInclude Include="mesh.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="VulkanRenderer.cpp" />
     <ClCompile Include="utils.cpp" />
+    <ClCompile Include="mesh.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="shaders">

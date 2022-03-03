@@ -10,6 +10,8 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm.hpp>
 
+#include "mesh.h"
+
 const size_t MAX_NUMBER_OF_PROCCESSED_FRAMES_INFLIGHT = 2;
 
 struct QueueFamilyIndices
@@ -96,4 +98,6 @@ private:
    std::vector<VkFence> drawFences;
    std::vector<VkSemaphore> rendersFinished;
    size_t currentFrame = 0;
+
+   Mesh firstMesh;
 };

@@ -93,11 +93,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="mesh.h" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="VulkanRenderer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="mesh.cpp" />
     <ClCompile Include="utils.cpp" />
     <ClCompile Include="VulkanRenderer.cpp" />
   </ItemGroup>
