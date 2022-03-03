@@ -29,16 +29,16 @@ int VulkanRenderer::init(GLFWwindow* window)
       createFrameBuffers();
       createCommandPool();
 
+      std::vector<uint16_t> firstMeshIndices = { 0,1,2,0,2,3 };
+
       std::vector<Vertex> firstMeshVertices = {
          {{ 0.4, -0.4, 0.0}, {1.0, 0.0, 0.0} },
          {{ 0.4,  0.4, 0.0}, {0.0, 1.0, 0.0} },
          {{-0.4,  0.4, 0.0}, {0.0, 0.0, 1.0} },
-         {{ 0.4, -0.4, 0.0}, {1.0, 0.0, 0.0} },
-         {{-0.4,  0.4, 0.0}, {0.0, 0.0, 1.0} },
          {{-0.4, -0.4, 0.0}, {0.0, 1.0, 0.0} },
       };
 
-      firstMesh = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool,  firstMeshVertices);
+      firstMesh = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool,  firstMeshVertices, firstMeshIndices);
 
       //render something
       allocateCommandBuffers();
@@ -785,7 +785,9 @@ void VulkanRenderer::recordCommandBuffers()
       VkBuffer buffers[] = { firstMesh.getVertexBuffer() };
       vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, buffers, offsets);
 
-      vkCmdDraw(commandBuffers[i], firstMesh.getVertexCount(), 1, 0, 0);
+      vkCmdBindIndexBuffer(commandBuffers[i], firstMesh.getIndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
+
+      vkCmdDrawIndexed(commandBuffers[i], firstMesh.getIndicesCount(), 1, 0, 0, 0);
 
       vkCmdEndRenderPass(commandBuffers[i]);
 
