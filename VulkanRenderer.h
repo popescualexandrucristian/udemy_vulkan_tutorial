@@ -16,7 +16,7 @@ const size_t MAX_NUMBER_OF_PROCCESSED_FRAMES_INFLIGHT = 2;
 
 struct QueueFamilyIndices
 {
-   int32_t graphicFamily = -1;
+   int32_t graphicFamily = -1; //by the standard this is also a transfer queue, but this can be optimized
    int32_t presentationFamily = -1;
 
    bool valid();

@@ -13,7 +13,7 @@ class Mesh
 {
 public:
    Mesh() {};
-   Mesh(VkPhysicalDevice physicalDevice, VkDevice logicalDevice, const std::vector<Vertex>& data);
+   Mesh(VkPhysicalDevice physicalDevice, VkDevice logicalDevice, VkQueue transferQueue, VkCommandPool transferCommandPool, const std::vector<Vertex>& data);
 
    uint32_t getVertexCount() const;
    VkBuffer getVertexBuffer() const;
@@ -28,7 +28,9 @@ private:
    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
    VkDevice logicalDevice = VK_NULL_HANDLE;
 
+   VkQueue transferQueue = VK_NULL_HANDLE;
+   VkCommandPool transferCommandPool = VK_NULL_HANDLE;
+
    void createVertexBuffer(const std::vector<Vertex>& data);
-   uint32_t findMemoryTypeIndex(uint32_t allowedTypes, VkMemoryPropertyFlags properties) const;
 };
 

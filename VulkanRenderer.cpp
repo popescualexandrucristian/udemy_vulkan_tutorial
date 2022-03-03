@@ -24,32 +24,32 @@ int VulkanRenderer::init(GLFWwindow* window)
       createLogicalDevice();// and logical queues
       createSwapChain(); // and swapchain images
 
+      createRenderPass();
+      createGraphicsPipeline();
+      createFrameBuffers();
+      createCommandPool();
+
       std::vector<Vertex> firstMeshVertices = {
          {{ 0.4, -0.4, 0.0}, {1.0, 0.0, 0.0} },
          {{ 0.4,  0.4, 0.0}, {0.0, 1.0, 0.0} },
          {{-0.4,  0.4, 0.0}, {0.0, 0.0, 1.0} },
          {{ 0.4, -0.4, 0.0}, {1.0, 0.0, 0.0} },
          {{-0.4,  0.4, 0.0}, {0.0, 0.0, 1.0} },
-         {{-0.4, -0.4, 0.0}, {0.0, 0.0, 0.0} },
+         {{-0.4, -0.4, 0.0}, {0.0, 1.0, 0.0} },
       };
 
-      firstMesh = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, firstMeshVertices);
+      firstMesh = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool,  firstMeshVertices);
 
       //render something
-      createRenderPass();
-      createGraphicsPipeline();
-      createFrameBuffers();
-      createCommandPool();
       allocateCommandBuffers();
       createSyncronization();
+      recordCommandBuffers();
    }
    catch (const std::runtime_error& e)
    {
       printf("ERROR : %s\n", e.what());
       return EXIT_FAILURE;
    }
-
-   recordCommandBuffers();
 
    return EXIT_SUCCESS;
 }
