@@ -45,6 +45,8 @@ public:
 
    void draw();
 
+   void updateModelData(const glm::mat4&);
+
    ~VulkanRenderer();
 
 private:
@@ -71,6 +73,10 @@ private:
    void allocateCommandBuffers();
    void recordCommandBuffers();
    void createSyncronization();
+   void createDescriptorSetLayout();
+   void createDescriptorSet();
+   void createUniformBuffers();
+   void updateUniformBuffers(size_t frame);
 
    GLFWwindow* window = nullptr;
    VkInstance instance = VK_NULL_HANDLE;
@@ -100,4 +106,16 @@ private:
    size_t currentFrame = 0;
 
    std::vector<Mesh> meshes;
+
+   struct MVP
+   {
+      glm::mat4 projection;
+      glm::mat4 view;
+      glm::mat4 model;
+   } mvp;
+   VkDescriptorSetLayout uboDescriptorSetLayout = VK_NULL_HANDLE;
+   std::vector<VkBuffer> uboBuffers;
+   std::vector<VkDeviceMemory> uboBuffersMemory;
+   std::vector<VkDescriptorSet> uboDescriptorSets;
+   VkDescriptorPool uboDescriptorPool = VK_NULL_HANDLE;
 };
