@@ -31,14 +31,24 @@ int VulkanRenderer::init(GLFWwindow* window)
 
       std::vector<uint16_t> firstMeshIndices = { 0,1,2,0,2,3 };
 
+      glm::vec3 firstMeshScreenPos = { -0.5f ,0.0f ,0.0f };
       std::vector<Vertex> firstMeshVertices = {
-         {{ 0.4, -0.4, 0.0}, {1.0, 0.0, 0.0} },
-         {{ 0.4,  0.4, 0.0}, {0.0, 1.0, 0.0} },
-         {{-0.4,  0.4, 0.0}, {0.0, 0.0, 1.0} },
-         {{-0.4, -0.4, 0.0}, {0.0, 1.0, 0.0} },
+         {firstMeshScreenPos + glm::vec3{ 0.4, -0.4, 0.0}, {1.0, 0.0, 0.0} },
+         {firstMeshScreenPos + glm::vec3{ 0.4,  0.4, 0.0}, {0.0, 1.0, 0.0} },
+         {firstMeshScreenPos + glm::vec3{-0.4,  0.4, 0.0}, {0.0, 0.0, 1.0} },
+         {firstMeshScreenPos + glm::vec3{-0.4, -0.4, 0.0}, {1.0, 1.0, 0.0} },
       };
 
-      firstMesh = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool,  firstMeshVertices, firstMeshIndices);
+      glm::vec3 secondMeshScreenPos = { 0.5f ,0.0f ,0.0f };
+      std::vector<Vertex> secondMeshVertices = {
+         {secondMeshScreenPos + glm::vec3{ 0.3, -0.4, 0.0}, {0.0, 0.0, 1.0} },
+         {secondMeshScreenPos + glm::vec3{ 0.3,  0.4, 0.0}, {0.0, 1.0, 0.0} },
+         {secondMeshScreenPos + glm::vec3{-0.3,  0.4, 0.0}, {1.0, 0.0, 0.0} },
+         {secondMeshScreenPos + glm::vec3{-0.3, -0.4, 0.0}, {0.0, 1.0, 1.0} },
+      };
+
+      meshes.emplace_back(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, firstMeshVertices, firstMeshIndices);
+      meshes.emplace_back(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, secondMeshVertices, firstMeshIndices);
 
       //render something
       allocateCommandBuffers();
@@ -58,7 +68,8 @@ void VulkanRenderer::cleanup()
 {
    vkDeviceWaitIdle(mainDevice.logicalDevice);
 
-   firstMesh.clean();
+   for(auto& m : meshes)
+      m.clean();
 
    for (size_t i = 0; i < drawFences.size(); ++i)
    {
@@ -781,13 +792,17 @@ void VulkanRenderer::recordCommandBuffers()
 
       vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
-      VkDeviceSize offsets[] = { 0 };
-      VkBuffer buffers[] = { firstMesh.getVertexBuffer() };
-      vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, buffers, offsets);
+      for (auto& m : meshes)
+      {
+         VkDeviceSize offsets[] = { 0 };
+         VkBuffer buffers[] = { m.getVertexBuffer() };
+         vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, buffers, offsets);
 
-      vkCmdBindIndexBuffer(commandBuffers[i], firstMesh.getIndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
+         vkCmdBindIndexBuffer(commandBuffers[i], m.getIndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
 
-      vkCmdDrawIndexed(commandBuffers[i], firstMesh.getIndicesCount(), 1, 0, 0, 0);
+         vkCmdDrawIndexed(commandBuffers[i], m.getIndicesCount(), 1, 0, 0, 0);
+
+      }
 
       vkCmdEndRenderPass(commandBuffers[i]);
 

@@ -99,5 +99,5 @@ private:
    std::vector<VkSemaphore> rendersFinished;
    size_t currentFrame = 0;
 
-   Mesh firstMesh;
+   std::vector<Mesh> meshes;
 };
