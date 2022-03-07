@@ -45,6 +45,16 @@ const UboModel& Mesh::getUboModel() const
    return uboModel;
 }
 
+void Mesh::setPushModel(const PushModel& pushModel)
+{
+   this->pushModel = pushModel;
+}
+
+const PushModel& Mesh::getPushModel() const
+{
+   return pushModel;
+}
+
 void Mesh::clean()
 {
    if (indicesMemory != VK_NULL_HANDLE)

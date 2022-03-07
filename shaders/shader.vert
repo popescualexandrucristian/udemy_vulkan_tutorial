@@ -14,10 +14,15 @@ layout(set = 0, binding = 1) uniform Model
    mat4 model;
 } model;
 
+layout(push_constant) uniform PushColor
+{
+   vec3 color;
+} pushColor;
+
 layout(location = 0) out vec3 outColor;
 
 void main()
 {
    gl_Position = uboViewProjection.projection * uboViewProjection.view * model.model * vec4(position, 1.0);
-   outColor = color;
+   outColor = color * pushColor.color;
 }

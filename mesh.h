@@ -15,6 +15,11 @@ struct UboModel
    glm::mat4 model = glm::identity<glm::mat4>();
 };
 
+struct PushModel
+{
+   glm::vec3 color = { 1.0f, 1.0f, 1.0f };
+};
+
 class Mesh
 {
 public:
@@ -29,10 +34,14 @@ public:
    void setUboModel(const UboModel&);
    const UboModel& getUboModel() const;
 
+   void setPushModel(const PushModel&);
+   const PushModel& getPushModel() const;
+
    void clean();
 
 private:
    UboModel uboModel;
+   PushModel pushModel;
 
    uint32_t vertexCount = 0;
    uint32_t indicesCount = 0;

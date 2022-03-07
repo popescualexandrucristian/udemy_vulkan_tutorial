@@ -52,7 +52,7 @@ public:
 
    void draw();
 
-   void updateModelData(const UboModel&);
+   void updateModelData(size_t index, const UboModel&, const PushModel&);
 
    ~VulkanRenderer();
 
@@ -78,7 +78,7 @@ private:
    void createFrameBuffers();
    void createCommandPool();
    void allocateCommandBuffers();
-   void recordCommandBuffers();
+   void recordCommandBuffers(size_t frame);
    void createSyncronization();
    void createDescriptorSetLayout();
    void createDescriptorSet();

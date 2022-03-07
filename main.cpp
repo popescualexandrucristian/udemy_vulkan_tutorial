@@ -51,9 +51,11 @@ int main()
             angle = 0.0f;
 
          glm::mat4 transform = glm::rotate(glm::translate(glm::identity<glm::mat4>(), { -0.5f ,0.0f ,0.0f }), glm::radians(angle), glm::vec3(0.0f, 0.0f, 1.0f));
-         UboModel model = {};
+         UboModel model;
+         PushModel push;
+         push.color = glm::vec3{ angle / 360.f };
          model.model = transform;
-         vulkanRenderer.updateModelData(model);
+         vulkanRenderer.updateModelData(0, model, push);
          vulkanRenderer.draw();
          glfwPollEvents();
       }
