@@ -3,17 +3,21 @@
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 color;
 
-layout(set = 0, binding = 0) uniform MVP
+layout(set = 0, binding = 0) uniform UboViewProjection
 {
    mat4 projection;
    mat4 view;
+} uboViewProjection;
+
+layout(set = 0, binding = 1) uniform Model
+{
    mat4 model;
-} mvp;
+} model;
 
 layout(location = 0) out vec3 outColor;
 
 void main()
 {
-   gl_Position = mvp.projection * mvp.view * mvp.model * vec4(position, 1.0);
+   gl_Position = uboViewProjection.projection * uboViewProjection.view * model.model * vec4(position, 1.0);
    outColor = color;
 }

@@ -50,8 +50,10 @@ int main()
          if (angle > 360.0f)
             angle = 0.0f;
 
-         glm::mat4 transform = glm::rotate(glm::identity<glm::mat4>(), glm::radians(angle), glm::vec3(0.0f, 0.0f, 1.0f));
-         vulkanRenderer.updateModelData(transform);
+         glm::mat4 transform = glm::rotate(glm::translate(glm::identity<glm::mat4>(), { -0.5f ,0.0f ,0.0f }), glm::radians(angle), glm::vec3(0.0f, 0.0f, 1.0f));
+         UboModel model = {};
+         model.model = transform;
+         vulkanRenderer.updateModelData(model);
          vulkanRenderer.draw();
          glfwPollEvents();
       }

@@ -1,12 +1,18 @@
 #pragma once
 #include <glm.hpp>
+#include <gtc/matrix_transform.hpp>
 #include <vulkan/vulkan.h>
 #include <vector>
 
 struct Vertex
 {
-   glm::vec3 position;
-   glm::vec3 color;
+   glm::vec3 position = {};
+   glm::vec3 color = {};
+};
+
+struct UboModel
+{
+   glm::mat4 model = glm::identity<glm::mat4>();
 };
 
 class Mesh
@@ -20,9 +26,14 @@ public:
    VkBuffer getVertexBuffer() const;
    VkBuffer getIndexBuffer() const;
 
+   void setUboModel(const UboModel&);
+   const UboModel& getUboModel() const;
+
    void clean();
 
 private:
+   UboModel uboModel;
+
    uint32_t vertexCount = 0;
    uint32_t indicesCount = 0;
    VkBuffer verticesBuffer = VK_NULL_HANDLE;

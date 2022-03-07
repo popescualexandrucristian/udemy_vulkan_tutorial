@@ -13,6 +13,7 @@
 #include "mesh.h"
 
 const size_t MAX_NUMBER_OF_PROCCESSED_FRAMES_INFLIGHT = 2;
+const size_t MAX_OBJECTS = 2;
 
 struct QueueFamilyIndices
 {
@@ -35,6 +36,12 @@ struct SwapchainImage
    VkImageView imageView;
 };
 
+struct DeviceScore
+{
+   uint32_t deviceScore = 0;
+   VkDeviceSize minStorageBufferOffsetAlignment = 0;
+};
+
 class VulkanRenderer
 {
 public:
@@ -45,7 +52,7 @@ public:
 
    void draw();
 
-   void updateModelData(const glm::mat4&);
+   void updateModelData(const UboModel&);
 
    ~VulkanRenderer();
 
@@ -57,7 +64,7 @@ private:
    void getPhysicalDevice();
    void createLogicalDevice();
    bool checkDeviceSwapChainSupport(VkPhysicalDevice device) const;
-   uint32_t checkDeviceSutable(VkPhysicalDevice device) const;
+   DeviceScore checkDeviceSutable(VkPhysicalDevice device) const;
    QueueFamilyIndices getQueueFamilyIndices(VkPhysicalDevice device) const;
    SwapchainDetails getSwapchainDetails(VkPhysicalDevice device, VkSurfaceKHR surface) const;
    VkSurfaceFormatKHR selectBestSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats) const;
@@ -77,12 +84,14 @@ private:
    void createDescriptorSet();
    void createUniformBuffers();
    void updateUniformBuffers(size_t frame);
+   void allocateDynamicBufferTransferSpace();
 
    GLFWwindow* window = nullptr;
    VkInstance instance = VK_NULL_HANDLE;
    struct {
       VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
       VkDevice logicalDevice = VK_NULL_HANDLE;
+      VkDeviceSize minStorageBufferOffsetAlignment = 0;
    } mainDevice;
    QueueFamilyIndices queueFamilyIndices;
    SwapchainDetails swapchainDetails;
@@ -106,16 +115,20 @@ private:
    size_t currentFrame = 0;
 
    std::vector<Mesh> meshes;
+   size_t modelUniformAlignment = 0;
+   UboModel* modelTransferSpace = nullptr;
+   std::vector<VkBuffer> dynamicUboBuffers; //one per image buffer
+   std::vector<VkDeviceMemory> dynamicUboBuffersMemory;
 
-   struct MVP
+   struct UboViewProjection
    {
       glm::mat4 projection;
       glm::mat4 view;
-      glm::mat4 model;
-   } mvp;
-   VkDescriptorSetLayout uboDescriptorSetLayout = VK_NULL_HANDLE;
+   } uboViewProjection;
    std::vector<VkBuffer> uboBuffers;
-   std::vector<VkDeviceMemory> uboBuffersMemory;
-   std::vector<VkDescriptorSet> uboDescriptorSets;
-   VkDescriptorPool uboDescriptorPool = VK_NULL_HANDLE;
+   std::vector<VkDeviceMemory> uboBuffersMemory; //one per image buffer
+
+   VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
+   VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
+   std::vector<VkDescriptorSet> descriptorSets;
 };

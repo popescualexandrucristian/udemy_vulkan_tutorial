@@ -35,6 +35,16 @@ VkBuffer Mesh::getIndexBuffer() const
    return indicesBuffer;
 }
 
+void Mesh::setUboModel(const UboModel& in)
+{
+   uboModel = in;
+}
+
+const UboModel& Mesh::getUboModel() const
+{
+   return uboModel;
+}
+
 void Mesh::clean()
 {
    if (indicesMemory != VK_NULL_HANDLE)
