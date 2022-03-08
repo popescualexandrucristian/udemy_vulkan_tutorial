@@ -1,7 +1,6 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include <vector>
-#include <gtc/matrix_transform.hpp>
 
 #include "VulkanRenderer.h"
 #include "utils.h"

@@ -9,6 +9,7 @@
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm.hpp>
+#include <gtc/matrix_transform.hpp>
 
 #include "mesh.h"
 
@@ -34,6 +35,14 @@ struct SwapchainImage
 {
    VkImage image;
    VkImageView imageView;
+};
+
+struct DepthBuffer
+{
+   VkImage image = VK_NULL_HANDLE;
+   VkImageView imageView = VK_NULL_HANDLE;
+   VkDeviceMemory deviceMemory = VK_NULL_HANDLE;
+   VkFormat format = VK_FORMAT_UNDEFINED;
 };
 
 struct DeviceScore
@@ -71,6 +80,10 @@ private:
    VkPresentModeKHR selectBestPresentationMode(const std::vector<VkPresentModeKHR>& presentationModes) const;
    VkExtent2D selectBestResolution(GLFWwindow* window, VkSurfaceCapabilitiesKHR surfaceCapabilityes) const;
    void createSwapChain();
+   VkFormat choseOptimalImageFormat(const std::vector<VkFormat> formats, VkImageTiling tiling, VkFormatFeatureFlags flags) const;
+   void createDepthBuffer();
+   VkImage createImage(uint32_t width, uint32_t height, VkFormat format, 
+      VkImageTiling tiling, VkImageUsageFlags usageFlags, VkMemoryPropertyFlags propertyFlags, VkDeviceMemory* imageMemory ) const;
    VkImageView createImageView(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags) const;
    VkShaderModule createShaderModule(VkDevice device, const std::vector<char>& code) const;
    void createRenderPass();
@@ -101,6 +114,7 @@ private:
    VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
    VkSwapchainKHR swapChain = VK_NULL_HANDLE;
    std::vector<SwapchainImage> swapChainImages;
+   DepthBuffer depthBuffer;
    VkExtent2D currentResolution = {};
    VkSurfaceFormatKHR currentSurfaceFormat = { VK_FORMAT_UNDEFINED, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
    VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
