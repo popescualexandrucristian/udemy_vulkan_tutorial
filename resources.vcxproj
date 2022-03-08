@@ -15,22 +15,15 @@
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{db032fb0-96f2-475d-9234-bd5e56658844}</ProjectGuid>
-    <RootNamespace>shadersproject</RootNamespace>
+    <RootNamespace>resourceproject</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup>
     <ReadOnlyProject>true</ReadOnlyProject>
@@ -46,25 +39,7 @@
   </ImportGroup>
   <ImportGroup Label="Shared" >
   </ImportGroup>
-    <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    </ImportGroup>
-    <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    </ImportGroup>
-
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LinkIncremental>true</LinkIncremental>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LinkIncremental>false</LinkIncremental>
-  </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="vulkan_course_app.vcxproj">
-      <Project>{37db17a8-4d14-4087-85dd-97f940891ada}</Project>
-    </ProjectReference>
-  </ItemGroup>
   <ItemGroup>
     <None Include="shaders\*">
     </None>
@@ -74,14 +49,17 @@
     </None>
   </ItemGroup>
   <Target Name="PreBuild" AfterTargets="PostBuildEvent">
-   <Exec Command="build_shaders_debug.bat $(OutDir)" Condition="'$(Configuration)' == 'Debug'" />
-   <Exec Command="build_shaders_release.bat $(OutDir)" Condition="'$(Configuration)' == 'Release'" />
+      <ItemGroup>
+         <ShadersFileData Include="$(ProjectDir)\shaders\*.*"/>
+      </ItemGroup>
+      <Exec Command="build_shader_debug.bat $(OutDir) %(ShadersFileData.Identity)" Condition="'$(Configuration)' == 'Debug'" />
+      <Exec Command="build_shader_release.bat $(OutDir) %(ShadersFileData.Identity)" Condition="'$(Configuration)' == 'Release'" />
   </Target>
-  <Target Name="CopyData" AfterTargets="PostBuildEvent">
-   <ItemGroup>
-      <ResourceFileData Include="$(ProjectDir)\resources\*.*"/>
-   </ItemGroup>
-   <Copy SourceFiles="@(ResourceFileData)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="false"/>
+     <Target Name="CopyData" AfterTargets="PostBuildEvent">
+      <ItemGroup>
+         <ResourceFileData Include="$(ProjectDir)\resources\*.*"/>
+      </ItemGroup>
+      <Copy SourceFiles="@(ResourceFileData)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="false"/>
   </Target>
   <ItemGroup></ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
