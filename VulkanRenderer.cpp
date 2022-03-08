@@ -60,8 +60,6 @@ int VulkanRenderer::init(GLFWwindow* window)
       initialModel.model = glm::translate(glm::identity<glm::mat4>(), { -0.5f ,1.0f ,0.2f });
       meshes[0].setUboModel(initialModel);
 
-      Image testTexture = readImage("uv-test.png");
-
       //render something
       allocateCommandBuffers();
       createSyncronization();
