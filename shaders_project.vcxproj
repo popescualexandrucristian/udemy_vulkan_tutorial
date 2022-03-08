@@ -77,11 +77,20 @@
     <None Include="shaders\*">
     </None>
   </ItemGroup>
+ <ItemGroup>
+    <None Include="resources\*">
+    </None>
+  </ItemGroup>
   <Target Name="PreBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="build_shaders_debug.bat $(OutDir)" Condition="'$(Configuration)' == 'Debug'" />
-    <Exec Command="build_shaders_release.bat $(OutDir)" Condition="'$(Configuration)' == 'Release'" />
+   <Exec Command="build_shaders_debug.bat $(OutDir)" Condition="'$(Configuration)' == 'Debug'" />
+   <Exec Command="build_shaders_release.bat $(OutDir)" Condition="'$(Configuration)' == 'Release'" />
   </Target>
-
+  <Target Name="CopyData" AfterTargets="PostBuildEvent">
+   <ItemGroup>
+      <ResourceFileData Include="$(ProjectDir)\resources\*.*"/>
+   </ItemGroup>
+   <Copy SourceFiles="@(ResourceFileData)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="false"/>
+  </Target>
   <ItemGroup></ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,9 +1,18 @@
 #pragma once
 #include <vector>
 #include <vulkan/vulkan.h>
-#include <stdexcept>
 
 std::vector<char> readFile(const char* filePath);
+
+struct Image
+{
+   uint32_t width;
+   uint32_t height;
+   uint32_t number_of_components;
+   std::vector<char> data;
+};
+
+Image readImage(const char* filePath);
 
 
 uint32_t findMemoryTypeIndex(VkPhysicalDevice physicalDevice, uint32_t allowedTypes, VkMemoryPropertyFlags properties);

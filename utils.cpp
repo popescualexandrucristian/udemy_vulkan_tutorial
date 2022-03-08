@@ -1,5 +1,8 @@
 #include "utils.h"
 #include <iostream>
+#include <stdexcept>
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 
 std::vector<char> readFile(const char* filePath)
 {
@@ -34,6 +37,35 @@ std::vector<char> readFile(const char* filePath)
          availableData -= static_cast<long>(receivedData);
    }
    fclose(file);
+   return out;
+}
+
+Image readImage(const char* filePath)
+{
+   Image out;
+
+   FILE* file = fopen(filePath, "rb");
+   if (!file)
+      return out;
+
+   int width = 0;
+   int height = 0;
+   int comp = 0;
+   stbi_uc* status = stbi_load_from_file(file, &width, &height, &comp, comp);
+
+   fclose(file);
+
+   if (!status)
+      return out;
+
+   out.data.resize(width * height * comp);
+
+   memcpy(out.data.data(), status, out.data.size());
+   out.width = static_cast<uint32_t>(width);
+   out.height = static_cast<uint32_t>(height);
+   out.number_of_components = comp;
+
+   stbi_image_free(status);
    return out;
 }
 

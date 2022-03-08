@@ -46,13 +46,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <LibraryPath>$(ProjectDir)\external\glfw\lib-vc2019;$(VULKAN_SDK)\Lib;$(LibraryPath)</LibraryPath>
-    <IncludePath>$(ProjectDir)\external\glm;$(ProjectDir)\external\glfw\include;$(VULKAN_SDK)\Include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)\external\glm;$(ProjectDir)\external\glfw\include;$(VULKAN_SDK)\Include;$(ProjectDir)\external\stb;$(IncludePath)</IncludePath>
     <EnableMicrosoftCodeAnalysis>false</EnableMicrosoftCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <LibraryPath>$(ProjectDir)\external\glfw\lib-vc2019;$(VULKAN_SDK)\Lib;$(LibraryPath)</LibraryPath>
-    <IncludePath>$(ProjectDir)\external\glm;$(ProjectDir)\external\glfw\include;$(VULKAN_SDK)\Include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)\external\glm;$(ProjectDir)\external\glfw\include;$(VULKAN_SDK)\Include;$(ProjectDir)\external\stb;$(IncludePath)</IncludePath>
     <EnableMicrosoftCodeAnalysis>false</EnableMicrosoftCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup>
