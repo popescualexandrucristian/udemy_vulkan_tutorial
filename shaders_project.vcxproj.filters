@@ -7,7 +7,7 @@
     </Filter>
       <Filter Include="textures">
       <UniqueIdentifier>{9c509c0e-367c-42f5-9c19-1ac0710a7e03}</UniqueIdentifier>
-      <Extensions>png</Extensions>
+      <Extensions>png;jpg;jpeg</Extensions>
     </Filter>
   </ItemGroup>
 </Project>

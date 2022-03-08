@@ -15,6 +15,7 @@
 
 const size_t MAX_NUMBER_OF_PROCCESSED_FRAMES_INFLIGHT = 2;
 const size_t MAX_OBJECTS = 2;
+const size_t MAX_TEXTURES = 2;
 
 struct QueueFamilyIndices
 {
@@ -49,6 +50,15 @@ struct DeviceScore
 {
    uint32_t deviceScore = 0;
    VkDeviceSize minStorageBufferOffsetAlignment = 0;
+};
+
+struct LoadedImage
+{
+   std::string fileName;
+   VkImage image = VK_NULL_HANDLE;
+   VkDeviceMemory memory = VK_NULL_HANDLE;
+   VkImageView imageView = VK_NULL_HANDLE;
+   VkDescriptorSet samplerSet = VK_NULL_HANDLE;
 };
 
 class VulkanRenderer
@@ -94,10 +104,14 @@ private:
    void recordCommandBuffers(size_t frame);
    void createSyncronization();
    void createDescriptorSetLayout();
-   void createDescriptorSet();
+   void createSamplerDescriptorSetLayout();
+   void createDescriptorSet(); //and pool
    void createUniformBuffers();
    void updateUniformBuffers(size_t frame);
    void allocateDynamicBufferTransferSpace();
+   uint32_t createTexture(const char* imageFileName);
+   void createTextureSampler();
+   void createSamplerDescriptorPool();
 
    GLFWwindow* window = nullptr;
    VkInstance instance = VK_NULL_HANDLE;
@@ -145,4 +159,9 @@ private:
    VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
    VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
    std::vector<VkDescriptorSet> descriptorSets;
+
+   std::vector<LoadedImage> loadedTextures;
+   VkSampler textureSampler = VK_NULL_HANDLE;
+   VkDescriptorPool samplerDescriptorPool;
+   VkDescriptorSetLayout samplerDescriptorSetLayout = VK_NULL_HANDLE;
 };

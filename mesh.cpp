@@ -4,13 +4,14 @@
 #include <stdexcept>
 
 
-Mesh::Mesh(VkPhysicalDevice physicalDevice, VkDevice logicalDevice, VkQueue transferQueue, VkCommandPool transferCommandPool, const std::vector<Vertex>& vertices, const std::vector<uint16_t>& indices) :
+Mesh::Mesh(VkPhysicalDevice physicalDevice, VkDevice logicalDevice, VkQueue transferQueue, VkCommandPool transferCommandPool, const std::vector<Vertex>& vertices, const std::vector<uint16_t>& indices, size_t textureId) :
    vertexCount(static_cast<uint32_t>(vertices.size())),
    indicesCount(static_cast<uint32_t>(indices.size())),
    physicalDevice(physicalDevice),
    logicalDevice(logicalDevice),
    transferQueue(transferQueue),
-   transferCommandPool(transferCommandPool)
+   transferCommandPool(transferCommandPool),
+   textureId(textureId)
 {
    createVertexBuffer(vertices, indices);
 }
@@ -53,6 +54,11 @@ void Mesh::setPushModel(const PushModel& pushModel)
 const PushModel& Mesh::getPushModel() const
 {
    return pushModel;
+}
+
+const size_t Mesh::getTextureId() const
+{
+    return textureId;
 }
 
 void Mesh::clean()

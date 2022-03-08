@@ -10,6 +10,7 @@ struct Vertex
 {
    glm::vec3 position = {};
    glm::vec3 color = {};
+   glm::vec2 uv = {};
 };
 
 struct UboModel
@@ -26,7 +27,7 @@ class Mesh
 {
 public:
    Mesh() {};
-   Mesh(VkPhysicalDevice physicalDevice, VkDevice logicalDevice, VkQueue transferQueue, VkCommandPool transferCommandPool, const std::vector<Vertex>& vertices, const std::vector<uint16_t>& indices);
+   Mesh(VkPhysicalDevice physicalDevice, VkDevice logicalDevice, VkQueue transferQueue, VkCommandPool transferCommandPool, const std::vector<Vertex>& vertices, const std::vector<uint16_t>& indices, size_t textureId);
 
    uint32_t getVertexCount() const;
    uint32_t getIndicesCount() const;
@@ -38,6 +39,8 @@ public:
 
    void setPushModel(const PushModel&);
    const PushModel& getPushModel() const;
+
+   const size_t getTextureId() const;
 
    void clean();
 
@@ -57,6 +60,8 @@ private:
 
    VkQueue transferQueue = VK_NULL_HANDLE;
    VkCommandPool transferCommandPool = VK_NULL_HANDLE;
+
+   size_t textureId = 0;
 
    void createVertexBuffer(const std::vector<Vertex>& vertices, const std::vector<uint16_t>& indices);
 };
