@@ -75,6 +75,10 @@ public:
 
    void draw();
 
+   uint32_t loadTexture(const char* imageFileName);
+   uint32_t loadModel(const std::string& fileName);
+   void updateRenderCommands();
+
    void updateModelData(size_t index, const glm::mat4& transform, const PushModel& pushData);
 
    ~VulkanRenderer();
@@ -113,10 +117,8 @@ private:
    void createUniformBuffers();
    void updateUniformBuffers(size_t frame);
    void allocateDynamicBufferTransferSpace();
-   uint32_t createTexture(const char* imageFileName);
    void createTextureSampler();
    void createSamplerDescriptorPool();
-   void loadModels(const std::string& fileName);
 
    GLFWwindow* window = nullptr;
    VkInstance instance = VK_NULL_HANDLE;

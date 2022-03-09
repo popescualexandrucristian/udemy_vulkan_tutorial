@@ -50,8 +50,7 @@ int VulkanRenderer::init(GLFWwindow* window, bool useFixedCommandBufferRecording
 
       uboViewProjection.projection[1][1] *= -1.0;
 
-      createTexture("uv-test.png");//default texture
-      loadModels("cat.obj");
+      loadTexture("uv-test.png");//default texture
 
       //render something
       allocateCommandBuffers();
@@ -61,10 +60,7 @@ int VulkanRenderer::init(GLFWwindow* window, bool useFixedCommandBufferRecording
 
       if (useFixedCommandBufferRecordings)
       {
-         for (size_t i = 0; i < swapChainImages.size(); ++i)
-         {
-            recordCommandBuffers(i);
-         }
+         updateRenderCommands();
       }
    }
    catch (const std::runtime_error& e)
@@ -1192,7 +1188,7 @@ void VulkanRenderer::allocateDynamicBufferTransferSpace()
    modelTransferSpace = reinterpret_cast<UboModel*>(_aligned_malloc(MAX_OBJECTS * modelUniformAlignment, modelUniformAlignment));
 }
 
-uint32_t VulkanRenderer::createTexture(const char* imageFileName)
+uint32_t VulkanRenderer::loadTexture(const char* imageFileName)
 {
    for (uint32_t i = 0; i < loadedTextures.size(); ++i)
       if (loadedTextures[i].fileName == imageFileName)
@@ -1645,7 +1641,7 @@ static std::vector<Mesh> loadNode(VkPhysicalDevice phisicalDevice, VkDevice logi
    return std::move(out);
 }
 
-void VulkanRenderer::loadModels(const std::string& fileName)
+uint32_t VulkanRenderer::loadModel(const std::string& fileName)
 {
    Assimp::Importer importer;
    const aiScene* scene = importer.ReadFile(fileName, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices);
@@ -1688,9 +1684,19 @@ void VulkanRenderer::loadModels(const std::string& fileName)
       if (i.empty())
          mapMaterialToLoadedTexture[index++] = 0; // use the empty texture
       else
-         mapMaterialToLoadedTexture[index++] = createTexture(i.c_str());
+         mapMaterialToLoadedTexture[index++] = loadTexture(i.c_str());
    }
 
    std::vector<Mesh> modelMeshes = loadNode(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, scene->mRootNode, *scene, mapMaterialToLoadedTexture);
    meshes.emplace_back(std::move(modelMeshes));
+
+   return static_cast<uint32_t>(meshes.size() - 1);
+}
+
+void VulkanRenderer::updateRenderCommands()
+{
+   for (size_t i = 0; i < swapChainImages.size(); ++i)
+   {
+      recordCommandBuffers(i);
+   }
 }

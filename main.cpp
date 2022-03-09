@@ -34,8 +34,15 @@ int main()
 
    {
       VulkanRenderer vulkanRenderer;
-      if (EXIT_FAILURE == vulkanRenderer.init(window, false))
+      if (EXIT_FAILURE == vulkanRenderer.init(window, true))
          return EXIT_FAILURE;
+
+      uint32_t catModelIndex = vulkanRenderer.loadModel("cat.obj");
+
+      PushModel pushModel;
+      pushModel.color = glm::vec3(1.0f);
+      vulkanRenderer.updateModelData(catModelIndex, glm::identity<glm::mat4>(), pushModel);
+      vulkanRenderer.updateRenderCommands();
 
       double lastTime = 0.0f;
       float angle = 0.0f;
@@ -65,7 +72,7 @@ int main()
          PushModel pushModel;
          pushModel.color = glm::vec3(fabsf(glowFactor) + 0.5f);
 
-         vulkanRenderer.updateModelData(0, transform, pushModel);
+         vulkanRenderer.updateModelData(catModelIndex, transform, pushModel);
          try
          {
             vulkanRenderer.draw();
