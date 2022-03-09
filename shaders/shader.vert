@@ -26,6 +26,6 @@ layout(location = 1) out vec2 outUV;
 void main()
 {
    gl_Position = uboViewProjection.projection * uboViewProjection.view * model.model * vec4(position, 1.0);
-   outColor = color * pushColor.color;
+   outColor = color * vec3(0.5 + pushColor.color.r, 1.0, 1.0);
    outUV = uv;
 }

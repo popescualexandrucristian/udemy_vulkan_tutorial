@@ -4,6 +4,7 @@
 
 #include "VulkanRenderer.h"
 #include "utils.h"
+#include "mesh.h"
 #include <assimp/Importer.hpp>
 
 GLFWwindow* createWindow(const std::string& name = "test window", const int width = 800, const int height = 600)
@@ -33,11 +34,13 @@ int main()
 
    {
       VulkanRenderer vulkanRenderer;
-      if (EXIT_FAILURE == vulkanRenderer.init(window, true))
+      if (EXIT_FAILURE == vulkanRenderer.init(window, false))
          return EXIT_FAILURE;
 
       double lastTime = 0.0f;
       float angle = 0.0f;
+      float glowFactor = 0.0f;
+      bool glowDirection = true;
 
 
       while (!glfwWindowShouldClose(window))
@@ -50,8 +53,19 @@ int main()
          if (angle > 360.0f)
             angle = 0.0f;
 
+         if (glowDirection)
+            glowFactor += 0.1f * static_cast<float>(deltaTime);
+         else
+            glowFactor -= 0.1f * static_cast<float>(deltaTime);
+         if (fabs(glowFactor) > 0.5f)
+            glowDirection = !glowDirection;
+
          glm::mat4 transform = glm::rotate(glm::translate(glm::identity<glm::mat4>(), { 0.0f ,0.0f ,0.0f }), glm::radians(angle), glm::vec3(0.0f, 0.0f, 1.0f));
-         vulkanRenderer.updateModelData(0, transform);
+
+         PushModel pushModel;
+         pushModel.color = glm::vec3(fabsf(glowFactor) + 0.5f);
+
+         vulkanRenderer.updateModelData(0, transform, pushModel);
          try
          {
             vulkanRenderer.draw();

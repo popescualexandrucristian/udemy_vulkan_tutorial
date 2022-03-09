@@ -173,3 +173,13 @@ const glm::mat4& MeshModel::getModel() const
 {
    return model;
 }
+
+const PushModel& MeshModel::getPushData() const
+{
+   return pushModel;
+}
+
+void MeshModel::setPushData(const PushModel& in)
+{
+   pushModel = in;
+}

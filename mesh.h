@@ -61,6 +61,11 @@ class MeshModel
 {
 public:
    MeshModel(std::vector<Mesh>&& meshList);
+   MeshModel(MeshModel&&) = default;
+   MeshModel() = delete;
+   MeshModel(const MeshModel&) = delete;
+   MeshModel& operator=(const MeshModel&) = delete;
+   MeshModel& operator=(const MeshModel&&) = delete;
 
    uint32_t getMeshCount() const;
 
@@ -69,10 +74,14 @@ public:
    const glm::mat4& getModel() const;
    void setModel(const glm::mat4&);
 
+   const PushModel& getPushData() const;
+   void setPushData(const PushModel&);
+
    void clean();
 
    ~MeshModel();
 private:
    std::vector<Mesh> meshList;
    glm::mat4 model = glm::identity<glm::mat4>();
+   PushModel pushModel;
 };

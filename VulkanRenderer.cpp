@@ -517,12 +517,13 @@ SwapchainDetails VulkanRenderer::getSwapchainDetails(VkPhysicalDevice device, Vk
    return out;
 }
 
-void VulkanRenderer::updateModelData(size_t index, const glm::mat4& transform)
+void VulkanRenderer::updateModelData(size_t index, const glm::mat4& transform, const PushModel& pushData)
 {
    if (meshes.size() <= index)
       return;
 
    meshes[index].setModel(transform);
+   meshes[index].setPushData(pushData);
 }
 
 VkSurfaceFormatKHR VulkanRenderer::selectBestSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats) const
@@ -1317,8 +1318,7 @@ void VulkanRenderer::recordCommandBuffers(size_t frame)
    uint32_t meshIndex = 0;
    for (auto& model: meshes)
    {
-      PushModel pushModel;
-      vkCmdPushConstants(commandBuffers[frame], pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushModel), &pushModel);
+      vkCmdPushConstants(commandBuffers[frame], pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushModel), &model.getPushData());
 
       for (uint32_t m = 0; m < model.getMeshCount(); ++m) {
          VkDescriptorSet descriptors[] = { descriptorSets[frame], loadedTextures[model.getMesh(m)->getTextureId()].samplerSet };
@@ -1605,6 +1605,8 @@ static Mesh loadMesh(VkPhysicalDevice phisicalDevice, VkDevice logicalDevice, Vk
          out.uv = { textureCoordonateChannel[i].x, textureCoordonateChannel[i].y };
       if (vertexColorChannel)
          out.color = { vertexColorChannel[i].r, vertexColorChannel[i].g,vertexColorChannel[i].b };
+      else
+         out.color = { 1.0f, 1.0f, 1.0f };
 
       vertices[i] = std::move(out);
    }

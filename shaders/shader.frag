@@ -9,5 +9,5 @@ layout(set = 1, binding = 0) uniform sampler2D textureSampler;
 
 void main()
 {
-   outColor = max(vec4(inColor, 1.0), vec4(0.5)) * texture(textureSampler, inUV);
+   outColor = vec4(inColor, 1.0) * texture(textureSampler, inUV);
 }

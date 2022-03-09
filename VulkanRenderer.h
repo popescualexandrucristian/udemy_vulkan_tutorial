@@ -67,15 +67,15 @@ public:
    VulkanRenderer();
    VulkanRenderer(VulkanRenderer&) = delete;
    VulkanRenderer(VulkanRenderer&&) = delete;
-   VulkanRenderer operator=(VulkanRenderer&) = delete;
-   VulkanRenderer operator=(VulkanRenderer&&) = delete;
+   VulkanRenderer& operator=(const VulkanRenderer&) = delete;
+   VulkanRenderer& operator=(VulkanRenderer&&) = delete;
 
    int init(GLFWwindow* window, bool useFixedCommandBufferRecordings);
    void cleanup();
 
    void draw();
 
-   void updateModelData(size_t index, const glm::mat4& transform);
+   void updateModelData(size_t index, const glm::mat4& transform, const PushModel& pushData);
 
    ~VulkanRenderer();
 
