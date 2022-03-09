@@ -34,13 +34,13 @@
 [https://github.com/popescualexandrucristian/udemy_vulkan_tutorial/commit/ecef744503e8d8a12c3b13bd93eb80cf1989b5d6](https://github.com/popescualexandrucristian/udemy_vulkan_tutorial/commit/ecef744503e8d8a12c3b13bd93eb80cf1989b5d6)
 
 ## External libs
-[STB image](https://github.com/nothings/stb)
-[GLM](https://github.com/g-truc/glm)
-[GLFW](https://github.com/glfw/glfw)
-[ASSIM](https://github.com/assimp/assimp)
+[STB image](https://github.com/nothings/stb)  
+[GLM](https://github.com/g-truc/glm)  
+[GLFW](https://github.com/glfw/glfw)  
+[ASSIM](https://github.com/assimp/assimp)  
 
 ## External resources
-[Cat model](https://free3d.com/3d-model/cat-v1--522281.html)
-[Test texture](default color grid from Blander)
-[Panda texture](https://www.istockphoto.com/ro/fotografie/t%C3%A2n%C4%83rul-urs-panda-%C3%AEn-copac-gm1060491624-283471940)
+[Cat model](https://free3d.com/3d-model/cat-v1--522281.html)  
+Test texture - default color grid from Blander  
+[Panda texture](https://www.istockphoto.com/ro/fotografie/t%C3%A2n%C4%83rul-urs-panda-%C3%AEn-copac-gm1060491624-283471940)  
 
