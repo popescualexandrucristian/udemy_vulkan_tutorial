@@ -45,14 +45,14 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <LibraryPath>$(ProjectDir)\external\glfw\lib-vc2019;$(VULKAN_SDK)\Lib;$(LibraryPath)</LibraryPath>
-    <IncludePath>$(ProjectDir)\external\glm;$(ProjectDir)\external\glfw\include;$(VULKAN_SDK)\Include;$(ProjectDir)\external\stb;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)\external\glfw\lib-vc2019;$(VULKAN_SDK)\Lib;$(ProjectDir)\external\assimp;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)\external\glm;$(ProjectDir)\external\glfw\include;$(VULKAN_SDK)\Include;$(ProjectDir)\external\stb;$(ProjectDir)\external\assimp\include;$(IncludePath)</IncludePath>
     <EnableMicrosoftCodeAnalysis>false</EnableMicrosoftCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>$(ProjectDir)\external\glfw\lib-vc2019;$(VULKAN_SDK)\Lib;$(LibraryPath)</LibraryPath>
-    <IncludePath>$(ProjectDir)\external\glm;$(ProjectDir)\external\glfw\include;$(VULKAN_SDK)\Include;$(ProjectDir)\external\stb;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)\external\glfw\lib-vc2019;$(VULKAN_SDK)\Lib;$(ProjectDir)\external\assimp;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)\external\glm;$(ProjectDir)\external\glfw\include;$(VULKAN_SDK)\Include;$(ProjectDir)\external\stb;$(ProjectDir)\external\assimp\include;$(IncludePath)</IncludePath>
     <EnableMicrosoftCodeAnalysis>false</EnableMicrosoftCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup>
@@ -71,7 +71,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>glfw3dll.lib;vulkan-1.lib</AdditionalDependencies>
+      <AdditionalDependencies>glfw3dll.lib;vulkan-1.lib;assimp-vc140-mt.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -89,7 +89,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>glfw3dll.lib;vulkan-1.lib</AdditionalDependencies>
+      <AdditionalDependencies>glfw3dll.lib;vulkan-1.lib;assimp-vc140-mt.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -108,5 +108,6 @@
   </ImportGroup>
   <Target Name="AfterBuild">
     <Copy SourceFiles="$(ProjectDir)external\glfw\lib-vc2019\glfw3.dll" DestinationFolder="$(OutDir)" SkipUnchangedFiles="false" />
+    <Copy SourceFiles="$(ProjectDir)external\assimp\assimp-vc140-mt.dll" DestinationFolder="$(OutDir)" SkipUnchangedFiles="false" />
   </Target>
 </Project>

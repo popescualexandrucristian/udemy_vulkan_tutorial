@@ -21,8 +21,5 @@
     <None Include="shaders\shader.vert">
       <Filter>shaders</Filter>
     </None>
-    <None Include="shaders\*">
-      <Filter>shaders</Filter>
-    </None>
   </ItemGroup>
 </Project>

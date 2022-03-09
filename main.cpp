@@ -4,6 +4,7 @@
 
 #include "VulkanRenderer.h"
 #include "utils.h"
+#include <assimp/Importer.hpp>
 
 GLFWwindow* createWindow(const std::string& name = "test window", const int width = 800, const int height = 600)
 {
