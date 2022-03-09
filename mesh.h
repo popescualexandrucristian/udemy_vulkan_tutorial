@@ -29,7 +29,9 @@ public:
    Mesh() {};
    Mesh(Mesh&& other);
    Mesh(VkPhysicalDevice physicalDevice, VkDevice logicalDevice, VkQueue transferQueue, VkCommandPool transferCommandPool, const std::vector<Vertex>& vertices, const std::vector<uint16_t>& indices, size_t textureId);
-   Mesh(const Mesh& other) = default;
+   Mesh(const Mesh& other) = delete;
+   Mesh& operator=(Mesh&& other) = delete;
+   Mesh& operator=(const Mesh& other) = delete;
 
    uint32_t getVertexCount() const;
    uint32_t getIndicesCount() const;
