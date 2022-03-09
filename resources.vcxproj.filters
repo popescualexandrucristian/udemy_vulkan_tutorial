@@ -1,13 +1,21 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-     <Filter Include="shaders">
+    <Filter Include="shaders">
       <UniqueIdentifier>{9c509c0e-367c-42f5-9c19-1ac0710a7e03}</UniqueIdentifier>
       <Extensions>frag;vert</Extensions>
     </Filter>
-      <Filter Include="textures">
+    <Filter Include="textures">
       <UniqueIdentifier>{9c509c0e-367c-42f5-9c19-1ac0710a7e03}</UniqueIdentifier>
       <Extensions>png;jpg;jpeg</Extensions>
+    </Filter>
+    <Filter Include="models">
+      <UniqueIdentifier>{9c509c0e-367c-42f5-9c19-1ac0710a7e03}</UniqueIdentifier>
+      <Extensions>obj</Extensions>
+    </Filter>
+    <Filter Include="materials">
+      <UniqueIdentifier>{9c509c0e-367c-42f5-9c19-1ac0710a7e03}</UniqueIdentifier>
+      <Extensions>mtl</Extensions>
     </Filter>
   </ItemGroup>
 </Project>

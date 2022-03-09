@@ -14,8 +14,8 @@
 #include "mesh.h"
 
 const size_t MAX_NUMBER_OF_PROCCESSED_FRAMES_INFLIGHT = 2;
-const size_t MAX_OBJECTS = 2;
-const size_t MAX_TEXTURES = 2;
+const size_t MAX_OBJECTS = 10;
+const size_t MAX_TEXTURES = 10;
 
 struct QueueFamilyIndices
 {
@@ -65,13 +65,17 @@ class VulkanRenderer
 {
 public:
    VulkanRenderer();
+   VulkanRenderer(VulkanRenderer&) = delete;
+   VulkanRenderer(VulkanRenderer&&) = delete;
+   VulkanRenderer operator=(VulkanRenderer&) = delete;
+   VulkanRenderer operator=(VulkanRenderer&&) = delete;
 
-   int init(GLFWwindow* window);
+   int init(GLFWwindow* window, bool useFixedCommandBufferRecordings);
    void cleanup();
 
    void draw();
 
-   void updateModelData(size_t index, const UboModel&, const PushModel&);
+   void updateModelData(size_t index, const glm::mat4& transform);
 
    ~VulkanRenderer();
 
@@ -112,6 +116,7 @@ private:
    uint32_t createTexture(const char* imageFileName);
    void createTextureSampler();
    void createSamplerDescriptorPool();
+   void loadModels(const std::string& fileName);
 
    GLFWwindow* window = nullptr;
    VkInstance instance = VK_NULL_HANDLE;
@@ -142,7 +147,7 @@ private:
    std::vector<VkSemaphore> rendersFinished;
    size_t currentFrame = 0;
 
-   std::vector<Mesh> meshes;
+   std::vector<MeshModel> meshes;
    size_t modelUniformAlignment = 0;
    UboModel* modelTransferSpace = nullptr;
    std::vector<VkBuffer> dynamicUboBuffers; //one per image buffer
@@ -164,4 +169,6 @@ private:
    VkSampler textureSampler = VK_NULL_HANDLE;
    VkDescriptorPool samplerDescriptorPool;
    VkDescriptorSetLayout samplerDescriptorSetLayout = VK_NULL_HANDLE;
+
+   bool useFixedCommandBufferRecordings = false;
 };

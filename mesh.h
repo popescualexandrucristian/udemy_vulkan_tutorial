@@ -27,27 +27,22 @@ class Mesh
 {
 public:
    Mesh() {};
+   Mesh(Mesh&& other);
    Mesh(VkPhysicalDevice physicalDevice, VkDevice logicalDevice, VkQueue transferQueue, VkCommandPool transferCommandPool, const std::vector<Vertex>& vertices, const std::vector<uint16_t>& indices, size_t textureId);
+   Mesh(const Mesh& other) = default;
 
    uint32_t getVertexCount() const;
    uint32_t getIndicesCount() const;
    VkBuffer getVertexBuffer() const;
    VkBuffer getIndexBuffer() const;
 
-   void setUboModel(const UboModel&);
-   const UboModel& getUboModel() const;
-
-   void setPushModel(const PushModel&);
-   const PushModel& getPushModel() const;
-
    const size_t getTextureId() const;
 
    void clean();
 
-private:
-   UboModel uboModel;
-   PushModel pushModel;
+   ~Mesh();
 
+private:
    uint32_t vertexCount = 0;
    uint32_t indicesCount = 0;
    VkBuffer verticesBuffer = VK_NULL_HANDLE;
@@ -55,14 +50,29 @@ private:
    VkBuffer indicesBuffer = VK_NULL_HANDLE;
    VkDeviceMemory indicesMemory = VK_NULL_HANDLE;
 
-   VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
-   VkDevice logicalDevice = VK_NULL_HANDLE;
-
-   VkQueue transferQueue = VK_NULL_HANDLE;
-   VkCommandPool transferCommandPool = VK_NULL_HANDLE;
-
    size_t textureId = 0;
 
-   void createVertexBuffer(const std::vector<Vertex>& vertices, const std::vector<uint16_t>& indices);
+   VkDevice logicalDevice = VK_NULL_HANDLE;
+
+   void createVertexBuffer(VkPhysicalDevice physicalDevice, VkDevice logicalDevice, VkQueue transferQueue, VkCommandPool transferCommandPool, const std::vector<Vertex>& vertices, const std::vector<uint16_t>& indices);
 };
 
+class MeshModel
+{
+public:
+   MeshModel(std::vector<Mesh>&& meshList);
+
+   uint32_t getMeshCount() const;
+
+   const Mesh* getMesh(uint32_t index) const;
+
+   const glm::mat4& getModel() const;
+   void setModel(const glm::mat4&);
+
+   void clean();
+
+   ~MeshModel();
+private:
+   std::vector<Mesh> meshList;
+   glm::mat4 model = glm::identity<glm::mat4>();
+};

@@ -6,13 +6,18 @@
 #include <array>
 #include <gtc/matrix_transform.hpp>
 
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
 VulkanRenderer::VulkanRenderer()
 {
 }
 
-int VulkanRenderer::init(GLFWwindow* window)
+int VulkanRenderer::init(GLFWwindow* window, bool useFixedCommandBufferRecordings)
 {
    this->window = window;
+   this->useFixedCommandBufferRecordings = useFixedCommandBufferRecordings;
    try
    {
       //setup
@@ -41,36 +46,26 @@ int VulkanRenderer::init(GLFWwindow* window)
       createTextureSampler();
 
       uboViewProjection.projection = glm::perspective(glm::radians(45.0f), static_cast<float>(currentResolution.width) / currentResolution.height, 0.1f, 100.0f);
-      uboViewProjection.view = glm::lookAt(glm::vec3(1.0f,0.5f,1.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,0.0f,1.0f));
+      uboViewProjection.view = glm::lookAt(glm::vec3(50.0f,50.0f,50.0f), glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f,0.0f,1.0f));
 
       uboViewProjection.projection[1][1] *= -1.0;
 
-      uint32_t testTextureIndex = createTexture("uv-test.png");
-      uint32_t pandaTextureIndex = createTexture("panda.jpg");
-
-      std::vector<uint16_t> firstMeshIndices = { 0,1,2,0,2,3 };
-
-      std::vector<Vertex> firstMeshVertices = {
-         {glm::vec3{ -0.4,  0.4, 0.0}, {1.0, 0.0, 0.0}, {1.0f, 1.0f} },
-         {glm::vec3{ -0.4, -0.4, 0.0}, {0.0, 1.0, 0.0}, {1.0f, 0.0f} },
-         {glm::vec3{  0.4, -0.4, 0.0}, {0.0, 0.0, 1.0}, {0.0f, 0.0f} },
-         {glm::vec3{  0.4,  0.4, 0.0}, {1.0, 1.0, 0.0}, {0.0f, 1.0f} },
-      };
-
-      UboModel initialModel;
-
-      meshes.emplace_back(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, firstMeshVertices, firstMeshIndices, testTextureIndex);
-      meshes.emplace_back(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, firstMeshVertices, firstMeshIndices, pandaTextureIndex);
-      initialModel.model = glm::translate(glm::identity<glm::mat4>(), { 0.0f ,0.0f ,-0.2f });
-      meshes[1].setUboModel(initialModel);
-      initialModel.model = glm::translate(glm::identity<glm::mat4>(), { -0.5f ,1.0f ,0.2f });
-      meshes[0].setUboModel(initialModel);
+      createTexture("uv-test.png");//default texture
+      loadModels("cat.obj");
 
       //render something
       allocateCommandBuffers();
       createSyncronization();
       createUniformBuffers();
       createDescriptorSet();
+
+      if (useFixedCommandBufferRecordings)
+      {
+         for (size_t i = 0; i < swapChainImages.size(); ++i)
+         {
+            recordCommandBuffers(i);
+         }
+      }
    }
    catch (const std::runtime_error& e)
    {
@@ -270,7 +265,8 @@ void VulkanRenderer::draw()
       &imageIndex);
 
    updateUniformBuffers(imageIndex);
-   recordCommandBuffers(imageIndex);
+   if (!useFixedCommandBufferRecordings)
+      recordCommandBuffers(imageIndex);
 
    if (VK_SUCCESS != aquieredImage)
       throw std::runtime_error("Unable to get next swapchain image");
@@ -521,13 +517,12 @@ SwapchainDetails VulkanRenderer::getSwapchainDetails(VkPhysicalDevice device, Vk
    return out;
 }
 
-void VulkanRenderer::updateModelData(size_t index, const UboModel& ubo, const PushModel& push)
+void VulkanRenderer::updateModelData(size_t index, const glm::mat4& transform)
 {
    if (meshes.size() <= index)
       return;
 
-   meshes[index].setUboModel(ubo);
-   meshes[index].setPushModel(push);
+   meshes[index].setModel(transform);
 }
 
 VkSurfaceFormatKHR VulkanRenderer::selectBestSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats) const
@@ -1161,14 +1156,23 @@ void VulkanRenderer::updateUniformBuffers(size_t frame)
    vkUnmapMemory(mainDevice.logicalDevice, uboBuffersMemory[frame]);
    outData = nullptr;
 
-   //update dynamic uniform buffers object
+   //update dynamic uniform buffers object, in the drawing order
+   size_t meshaesCount = 0;
    for (size_t i = 0; i < meshes.size(); ++i)
    {
-      if (i > MAX_OBJECTS)
-         return;
+      UboModel uboModel;
+      uboModel.model = meshes[i].getModel();
 
-      UboModel* allignedLocation = reinterpret_cast<UboModel*>(reinterpret_cast<char*>(modelTransferSpace) + i * modelUniformAlignment);
-      memcpy(allignedLocation, &meshes[i].getUboModel(), sizeof(UboModel));
+      for (size_t m = 0; m < meshes[i].getMeshCount(); ++m)
+      {
+         if (meshaesCount > MAX_OBJECTS)
+            return;
+
+         UboModel* allignedLocation = reinterpret_cast<UboModel*>(reinterpret_cast<char*>(modelTransferSpace) + meshaesCount * modelUniformAlignment);
+         memcpy(allignedLocation, &uboModel, sizeof(UboModel));
+
+         ++meshaesCount;
+      }
    }
 
    void* bufferMem = nullptr;
@@ -1298,7 +1302,7 @@ void VulkanRenderer::recordCommandBuffers(size_t frame)
    beginRenderPassInfo.renderArea.offset = { 0,0 };
    beginRenderPassInfo.renderArea.extent = currentResolution;
    VkClearValue clearValues[] = {
-      { 0.6f, 0.65f, 0.4f, 1.0f },
+      { 3.0f / 255.0f, 131.0f / 255.0f, 135.0f / 255.0f, 1.0f },
       {1.0f}
    };
    beginRenderPassInfo.pClearValues = clearValues;
@@ -1311,24 +1315,25 @@ void VulkanRenderer::recordCommandBuffers(size_t frame)
    vkCmdBindPipeline(commandBuffers[frame], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
    uint32_t meshIndex = 0;
-   for (auto& m : meshes)
+   for (auto& model: meshes)
    {
-      VkDeviceSize offsets[] = { 0 };
-      VkBuffer buffers[] = { m.getVertexBuffer() };
-      vkCmdBindVertexBuffers(commandBuffers[frame], 0, 1, buffers, offsets);
+      PushModel pushModel;
+      vkCmdPushConstants(commandBuffers[frame], pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushModel), &pushModel);
 
-      vkCmdBindIndexBuffer(commandBuffers[frame], m.getIndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
+      for (uint32_t m = 0; m < model.getMeshCount(); ++m) {
+         VkDescriptorSet descriptors[] = { descriptorSets[frame], loadedTextures[model.getMesh(m)->getTextureId()].samplerSet };
 
-      uint32_t dynamicOffset = static_cast<uint32_t>(modelUniformAlignment) * meshIndex++;
+         uint32_t dynamicOffset = static_cast<uint32_t>(modelUniformAlignment) * meshIndex++;
+         vkCmdBindDescriptorSets(commandBuffers[frame], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 2, descriptors, 1, &dynamicOffset);
 
-      VkDescriptorSet descriptors[] = {descriptorSets[frame], loadedTextures[m.getTextureId()].samplerSet };
+         VkDeviceSize offsets[] = { 0 };
+         VkBuffer buffers[] = { model.getMesh(m)->getVertexBuffer() };
+         vkCmdBindVertexBuffers(commandBuffers[frame], 0, 1, buffers, offsets);
 
-      vkCmdBindDescriptorSets(commandBuffers[frame], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 2, descriptors, 1, &dynamicOffset);
+         vkCmdBindIndexBuffer(commandBuffers[frame], model.getMesh(m)->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
 
-      vkCmdPushConstants(commandBuffers[frame], pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushModel), &m.getPushModel());
-
-      vkCmdDrawIndexed(commandBuffers[frame], m.getIndicesCount(), 1, 0, 0, 0);
-
+         vkCmdDrawIndexed(commandBuffers[frame], model.getMesh(m)->getIndicesCount(), 1, 0, 0, 0);
+      }
    }
 
    vkCmdEndRenderPass(commandBuffers[frame]);
@@ -1574,4 +1579,116 @@ DeviceScore VulkanRenderer::checkDeviceSutable(VkPhysicalDevice device) const
 bool QueueFamilyIndices::valid()
 {
    return graphicFamily >= 0 && presentationFamily >= 0;
+}
+
+static Mesh loadMesh(VkPhysicalDevice phisicalDevice, VkDevice logicalDevice, VkQueue transferQueue, VkCommandPool transferCommandPool,
+   aiMesh* mesh, const aiScene& scene, const std::vector<uint32_t>& materialToTexture)
+{
+   std::vector<Vertex> vertices(mesh->mNumVertices);
+   std::vector<uint16_t> indices;
+
+   aiVector3D* textureCoordonateChannel = nullptr;
+   if (mesh->HasTextureCoords(0))
+      textureCoordonateChannel = mesh->mTextureCoords[0];
+
+   aiColor4D* vertexColorChannel = nullptr;
+   if (mesh->HasVertexColors(0))
+      vertexColorChannel = mesh->mColors[0];
+
+   for (size_t i = 0; i < mesh->mNumVertices; ++i)
+   {
+      Vertex out;
+      aiVector3D vertex = mesh->mVertices[i];
+      out.position = { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
+
+      if (textureCoordonateChannel)
+         out.uv = { textureCoordonateChannel[i].x, textureCoordonateChannel[i].y };
+      if (vertexColorChannel)
+         out.color = { vertexColorChannel[i].r, vertexColorChannel[i].g,vertexColorChannel[i].b };
+
+      vertices[i] = std::move(out);
+   }
+
+   for (size_t i = 0; i < mesh->mNumFaces; ++i)
+   {
+      aiFace* face = mesh->mFaces + i;
+      for (size_t j = 0; j < face->mNumIndices; ++j)
+      {
+         indices.push_back(face->mIndices[j]);
+      }
+   }
+
+   return Mesh(phisicalDevice, logicalDevice, transferQueue, transferCommandPool, vertices, indices, materialToTexture[mesh->mMaterialIndex]);
+   
+}
+
+static std::vector<Mesh> loadNode(VkPhysicalDevice phisicalDevice, VkDevice logicalDevice, VkQueue transferQueue, VkCommandPool transferCommandPool,
+   aiNode* node, const aiScene& scene, const std::vector<uint32_t>& materialToTexture)
+{
+   std::vector<Mesh> out;
+   for (unsigned int i = 0; i < node->mNumMeshes; ++i)
+   {
+      out.emplace_back(loadMesh(phisicalDevice, logicalDevice, transferQueue, transferCommandPool, scene.mMeshes[node->mMeshes[i]], scene, materialToTexture));
+   }
+
+   for (unsigned int i = 0; i < node->mNumChildren; ++i)
+   {
+      std::vector<Mesh> childMeshes = loadNode(phisicalDevice, logicalDevice, transferQueue, transferCommandPool, node->mChildren[i], scene, materialToTexture);
+      for (auto& m : childMeshes)
+      {
+         out.emplace_back(std::move(m));
+      }
+   }
+
+   return std::move(out);
+}
+
+void VulkanRenderer::loadModels(const std::string& fileName)
+{
+   Assimp::Importer importer;
+   const aiScene* scene = importer.ReadFile(fileName, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices);
+   if (!scene)
+      throw std::runtime_error("Failed to load model :" + fileName);
+
+
+   std::vector<std::string> textureNames(scene->mNumMaterials);
+   for (size_t i = 0; i < scene->mNumMaterials; ++i)
+   {
+      aiMaterial* material = scene->mMaterials[i];
+
+      std::string texturePath;
+
+      if (material->GetTextureCount(aiTextureType_DIFFUSE))
+      {
+         aiString path = {};
+         if (material->GetTexture(aiTextureType_DIFFUSE, 0, &path) == AI_SUCCESS)
+         {
+            texturePath = path.C_Str();
+         }
+      }
+
+      size_t lastBackslash = texturePath.rfind('\\');
+      if (lastBackslash != std::string::npos)
+      {
+         textureNames[i] = texturePath.substr(lastBackslash + 1);
+      }
+      else
+      {
+         textureNames[i] = std::move(texturePath);
+      }
+   }
+
+   std::vector<uint32_t> mapMaterialToLoadedTexture(textureNames.size());
+
+   size_t index = 0;
+   for (const auto& i : textureNames)
+   {
+      if (i.empty())
+         mapMaterialToLoadedTexture[index++] = 0; // use the empty texture
+      else
+         mapMaterialToLoadedTexture[index++] = createTexture(i.c_str());
+   }
+
+   std::vector<Mesh> modelMeshes = loadNode(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, scene->mRootNode, *scene, mapMaterialToLoadedTexture);
+   meshes.emplace_back(std::move(modelMeshes));
 }

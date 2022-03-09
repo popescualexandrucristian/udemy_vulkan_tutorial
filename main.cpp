@@ -33,7 +33,7 @@ int main()
 
    {
       VulkanRenderer vulkanRenderer;
-      if (EXIT_FAILURE == vulkanRenderer.init(window))
+      if (EXIT_FAILURE == vulkanRenderer.init(window, true))
          return EXIT_FAILURE;
 
       double lastTime = 0.0f;
@@ -50,13 +50,17 @@ int main()
          if (angle > 360.0f)
             angle = 0.0f;
 
-         glm::mat4 transform = glm::rotate(glm::translate(glm::identity<glm::mat4>(), { -0.5f ,0.0f ,0.0f }), glm::radians(angle), glm::vec3(0.0f, 0.0f, 1.0f));
-         UboModel model;
-         PushModel push;
-         push.color = glm::vec3{ angle / 360.f };
-         model.model = transform;
-         vulkanRenderer.updateModelData(0, model, push);
-         vulkanRenderer.draw();
+         glm::mat4 transform = glm::rotate(glm::translate(glm::identity<glm::mat4>(), { 0.0f ,0.0f ,0.0f }), glm::radians(angle), glm::vec3(0.0f, 0.0f, 1.0f));
+         vulkanRenderer.updateModelData(0, transform);
+         try
+         {
+            vulkanRenderer.draw();
+         }
+         catch (std::exception& e)
+         {
+            printf("Error while drawing : %s\n", e.what());
+            break;
+         }
          glfwPollEvents();
       }
    }

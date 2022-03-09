@@ -7,13 +7,35 @@
 Mesh::Mesh(VkPhysicalDevice physicalDevice, VkDevice logicalDevice, VkQueue transferQueue, VkCommandPool transferCommandPool, const std::vector<Vertex>& vertices, const std::vector<uint16_t>& indices, size_t textureId) :
    vertexCount(static_cast<uint32_t>(vertices.size())),
    indicesCount(static_cast<uint32_t>(indices.size())),
-   physicalDevice(physicalDevice),
    logicalDevice(logicalDevice),
-   transferQueue(transferQueue),
-   transferCommandPool(transferCommandPool),
    textureId(textureId)
 {
-   createVertexBuffer(vertices, indices);
+   createVertexBuffer(physicalDevice, logicalDevice, transferQueue, transferCommandPool, vertices, indices);
+}
+
+Mesh::Mesh(Mesh&& other) :
+vertexCount(other.vertexCount),
+indicesCount(other.indicesCount),
+verticesBuffer(other.verticesBuffer),
+verticesMemory(other.verticesMemory),
+indicesBuffer(other.indicesBuffer),
+indicesMemory(other.indicesMemory),
+logicalDevice(other.logicalDevice),
+textureId(other.textureId)
+{
+   other.vertexCount = 0;
+   other.indicesCount = 0;
+   other.verticesBuffer = VK_NULL_HANDLE;
+   other.verticesMemory = VK_NULL_HANDLE;
+   other.indicesBuffer = VK_NULL_HANDLE;
+   other.indicesMemory = VK_NULL_HANDLE;
+   other.textureId = 0;
+   other.logicalDevice = VK_NULL_HANDLE;
+}
+
+Mesh::~Mesh()
+{
+   clean();
 }
 
 uint32_t Mesh::getVertexCount() const
@@ -34,26 +56,6 @@ VkBuffer Mesh::getVertexBuffer() const
 VkBuffer Mesh::getIndexBuffer() const
 {
    return indicesBuffer;
-}
-
-void Mesh::setUboModel(const UboModel& in)
-{
-   uboModel = in;
-}
-
-const UboModel& Mesh::getUboModel() const
-{
-   return uboModel;
-}
-
-void Mesh::setPushModel(const PushModel& pushModel)
-{
-   this->pushModel = pushModel;
-}
-
-const PushModel& Mesh::getPushModel() const
-{
-   return pushModel;
 }
 
 const size_t Mesh::getTextureId() const
@@ -85,7 +87,7 @@ void Mesh::clean()
    vertexCount = 0;
 }
 
-void Mesh::createVertexBuffer(const std::vector<Vertex>& vertices, const std::vector<uint16_t>& indices)
+void Mesh::createVertexBuffer(VkPhysicalDevice physicalDevice, VkDevice logicalDevice, VkQueue transferQueue, VkCommandPool transferCommandPool, const std::vector<Vertex>& vertices, const std::vector<uint16_t>& indices)
 {
    VkBuffer stagingBuffer = VK_NULL_HANDLE;
    VkDeviceMemory stagingMemory = VK_NULL_HANDLE;
@@ -129,4 +131,45 @@ void Mesh::createVertexBuffer(const std::vector<Vertex>& vertices, const std::ve
 
    vkFreeMemory(logicalDevice, stagingMemory, nullptr);
    vkDestroyBuffer(logicalDevice, stagingBuffer, nullptr);
+}
+
+MeshModel::MeshModel(std::vector<Mesh>&& meshList) :
+meshList(std::move(meshList))
+{
+}
+
+MeshModel::~MeshModel()
+{
+   clean();
+}
+
+void MeshModel::setModel(const glm::mat4& model)
+{
+   this->model = model;
+}
+
+uint32_t MeshModel::getMeshCount() const
+{
+   return static_cast<uint32_t>(meshList.size());
+}
+
+const Mesh* MeshModel::getMesh(uint32_t index) const
+{
+   if (index >= meshList.size())
+      return nullptr;
+
+   return &meshList[index];
+}
+
+void MeshModel::clean()
+{
+   for (auto& m : meshList)
+      m.clean();
+
+   meshList.clear();
+}
+
+const glm::mat4& MeshModel::getModel() const
+{
+   return model;
 }
