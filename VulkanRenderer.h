@@ -38,12 +38,13 @@ struct SwapchainImage
    VkImageView imageView;
 };
 
-struct DepthBuffer
+struct ImageBuffer
 {
    VkImage image = VK_NULL_HANDLE;
    VkImageView imageView = VK_NULL_HANDLE;
    VkDeviceMemory deviceMemory = VK_NULL_HANDLE;
-   VkFormat format = VK_FORMAT_UNDEFINED;
+
+   void clean(VkDevice logicalDevice);
 };
 
 struct DeviceScore
@@ -100,6 +101,7 @@ private:
    void createSwapChain();
    VkFormat choseOptimalImageFormat(const std::vector<VkFormat> formats, VkImageTiling tiling, VkFormatFeatureFlags flags) const;
    void createDepthBuffer();
+   void createColorBuffer();
    VkImage createImage(uint32_t width, uint32_t height, VkFormat format, 
       VkImageTiling tiling, VkImageUsageFlags usageFlags, VkMemoryPropertyFlags propertyFlags, VkDeviceMemory* imageMemory ) const;
    VkImageView createImageView(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags) const;
@@ -111,9 +113,13 @@ private:
    void allocateCommandBuffers();
    void recordCommandBuffers(size_t frame);
    void createSyncronization();
-   void createDescriptorSetLayout();
-   void createSamplerDescriptorSetLayout();
-   void createDescriptorSet(); //and pool
+   void createSubPassADescriptorSetLayout();
+   void createSubPassBDescriptorSetLayout();
+   void createSubPassASamplerDescriptorSetLayout();
+   void crateSubPassABufferDescriptorSetPool();
+   void crateSubPassBInputDescriptorSetPool();
+   void createSubPassABufferDescriptorSet();
+   void createSubPassBInputDescriptorSet();
    void createUniformBuffers();
    void updateUniformBuffers(size_t frame);
    void allocateDynamicBufferTransferSpace();
@@ -135,12 +141,17 @@ private:
    VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
    VkSwapchainKHR swapChain = VK_NULL_HANDLE;
    std::vector<SwapchainImage> swapChainImages;
-   DepthBuffer depthBuffer;
+   std::vector<ImageBuffer> colorBuffers;
+   VkFormat colorBufferFormat = VK_FORMAT_UNDEFINED;
+   std::vector<ImageBuffer> depthBuffers;
+   VkFormat depthBufferFormat = VK_FORMAT_UNDEFINED;
    VkExtent2D currentResolution = {};
    VkSurfaceFormatKHR currentSurfaceFormat = { VK_FORMAT_UNDEFINED, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
-   VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+   VkPipelineLayout subPassAPipelineLayout = VK_NULL_HANDLE;
+   VkPipelineLayout subPassBPipelineLayout = VK_NULL_HANDLE;
    VkRenderPass renderPass = VK_NULL_HANDLE;
-   VkPipeline graphicsPipeline = VK_NULL_HANDLE;
+   VkPipeline subPassAGraphicsPipeline = VK_NULL_HANDLE;
+   VkPipeline subPassBGraphicsPipeline = VK_NULL_HANDLE;
    std::vector<VkFramebuffer> swapChainFramebuffers;
    VkCommandPool graphicsCommandPool = VK_NULL_HANDLE;
    std::vector<VkCommandBuffer> commandBuffers;
@@ -163,14 +174,19 @@ private:
    std::vector<VkBuffer> uboBuffers;
    std::vector<VkDeviceMemory> uboBuffersMemory; //one per image buffer
 
-   VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
-   VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
-   std::vector<VkDescriptorSet> descriptorSets;
+   VkDescriptorSetLayout subPassADescriptorSetLayout = VK_NULL_HANDLE;
+   VkDescriptorSetLayout subPassBDescriptorSetLayout = VK_NULL_HANDLE;
+   VkDescriptorPool subPassABufferDescriptorPool = VK_NULL_HANDLE;
+   std::vector<VkDescriptorSet> subPassABufferDescriptorSets; //one per spachain image
+
+   std::vector<VkDescriptorSet> subPassBInputDescriptorSets; //one per spachain image
 
    std::vector<LoadedImage> loadedTextures;
    VkSampler textureSampler = VK_NULL_HANDLE;
-   VkDescriptorPool samplerDescriptorPool;
+   VkDescriptorPool subPassASamplerDescriptorPool;
    VkDescriptorSetLayout samplerDescriptorSetLayout = VK_NULL_HANDLE;
+
+   VkDescriptorPool subPassBInputsDescriptorPool = VK_NULL_HANDLE;
 
    bool useFixedCommandBufferRecordings = false;
 };
