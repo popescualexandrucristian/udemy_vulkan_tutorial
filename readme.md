@@ -5,6 +5,11 @@
 
 ## Progress
 
+### Mar 10, 2022 Add support for swap-chain resize/screen resize
+![e26985e5dec60b6aa59a79c19f93083d0e774330](https://github.com/popescualexandrucristian/udemy_vulkan_tutorial/blob/master/documentation/01dd01b26a3634e5ffc64a7cea3d346d55adbf47.jpg?raw=true)
+[https://github.com/popescualexandrucristian/udemy_vulkan_tutorial/commit/e26985e5dec60b6aa59a79c19f93083d0e774330](https://github.com/popescualexandrucristian/udemy_vulkan_tutorial/commit/e26985e5dec60b6aa59a79c19f93083d0e774330)
+
+
 ### Mar 10, 2022 Add a second sub-pass, the first pass stores the color and the depth and the second pass displayes on half of the screen the color pass and on half the depth pass
 ![9ac2d3a90fd7f7a7cc3352965246224eee05e31b](https://github.com/popescualexandrucristian/udemy_vulkan_tutorial/blob/master/documentation/9ac2d3a90fd7f7a7cc3352965246224eee05e31b.jpg?raw=true)
 [https://github.com/popescualexandrucristian/udemy_vulkan_tutorial/commit/9ac2d3a90fd7f7a7cc3352965246224eee05e31b](https://github.com/popescualexandrucristian/udemy_vulkan_tutorial/commit/9ac2d3a90fd7f7a7cc3352965246224eee05e31b)
