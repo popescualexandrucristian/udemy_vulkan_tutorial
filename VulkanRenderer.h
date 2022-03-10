@@ -65,7 +65,7 @@ struct LoadedImage
 class VulkanRenderer
 {
 public:
-   VulkanRenderer();
+   VulkanRenderer() = default;
    VulkanRenderer(VulkanRenderer&) = delete;
    VulkanRenderer(VulkanRenderer&&) = delete;
    VulkanRenderer& operator=(const VulkanRenderer&) = delete;

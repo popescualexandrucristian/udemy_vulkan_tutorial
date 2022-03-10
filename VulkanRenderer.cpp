@@ -10,11 +10,6 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-VulkanRenderer::VulkanRenderer()
-{
-}
-
-
 void VulkanRenderer::cleanupAfterResize()
 {
    if (!subPassBInputDescriptorSets.empty())
@@ -75,6 +70,10 @@ void VulkanRenderer::initAfterResize()
    createColorBuffer();
    createFrameBuffers();
    createSubPassBInputDescriptorSet();
+
+   uboViewProjection.projection = glm::perspective(glm::radians(45.0f), static_cast<float>(currentResolution.width) / currentResolution.height, 0.1f, 100.0f);
+   uboViewProjection.view = glm::lookAt(glm::vec3(50.0f, 50.0f, 50.0f), glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+   uboViewProjection.projection[1][1] *= -1.0;
 }
 
 void VulkanRenderer::resized()
