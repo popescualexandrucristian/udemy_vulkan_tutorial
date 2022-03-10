@@ -126,6 +126,10 @@ private:
    void createTextureSampler();
    void createSamplerDescriptorPool();
 
+   void initAfterResize();
+   void cleanupAfterResize();
+   void resized();
+
    GLFWwindow* window = nullptr;
    VkInstance instance = VK_NULL_HANDLE;
    struct {

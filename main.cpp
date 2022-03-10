@@ -12,7 +12,7 @@ GLFWwindow* createWindow(const std::string& name = "test window", const int widt
    glfwInit();
 
    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+   glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
    return glfwCreateWindow(width, height, name.c_str(), nullptr, nullptr);
 }
@@ -34,7 +34,7 @@ int main()
 
    {
       VulkanRenderer vulkanRenderer;
-      if (EXIT_FAILURE == vulkanRenderer.init(window, true))
+      if (EXIT_FAILURE == vulkanRenderer.init(window, false))
          return EXIT_FAILURE;
 
       uint32_t catModelIndex = vulkanRenderer.loadModel("cat.obj");

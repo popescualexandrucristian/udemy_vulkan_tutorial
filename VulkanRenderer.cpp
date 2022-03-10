@@ -14,6 +14,76 @@ VulkanRenderer::VulkanRenderer()
 {
 }
 
+
+void VulkanRenderer::cleanupAfterResize()
+{
+   if (!subPassBInputDescriptorSets.empty())
+      vkFreeDescriptorSets(mainDevice.logicalDevice, subPassBInputsDescriptorPool, static_cast<uint32_t>(subPassBInputDescriptorSets.size()), subPassBInputDescriptorSets.data());
+   subPassBInputDescriptorSets.clear();
+
+   for (auto& depthBuffer : depthBuffers)
+      depthBuffer.clean(mainDevice.logicalDevice);
+
+   for (auto& colorBuffer : colorBuffers)
+      colorBuffer.clean(mainDevice.logicalDevice);
+
+   if (subPassAGraphicsPipeline != VK_NULL_HANDLE)
+      vkDestroyPipeline(mainDevice.logicalDevice, subPassAGraphicsPipeline, nullptr);
+
+   subPassAGraphicsPipeline = VK_NULL_HANDLE;
+
+   if (subPassAPipelineLayout != VK_NULL_HANDLE)
+      vkDestroyPipelineLayout(mainDevice.logicalDevice, subPassAPipelineLayout, nullptr);
+
+   subPassAPipelineLayout = VK_NULL_HANDLE;
+
+   if (subPassBGraphicsPipeline != VK_NULL_HANDLE)
+      vkDestroyPipeline(mainDevice.logicalDevice, subPassBGraphicsPipeline, nullptr);
+
+   subPassBGraphicsPipeline = VK_NULL_HANDLE;
+
+   if (subPassBPipelineLayout != VK_NULL_HANDLE)
+      vkDestroyPipelineLayout(mainDevice.logicalDevice, subPassBPipelineLayout, nullptr);
+
+   subPassBPipelineLayout = VK_NULL_HANDLE;
+
+   for (auto& framebuffer : swapChainFramebuffers)
+      vkDestroyFramebuffer(mainDevice.logicalDevice, framebuffer, nullptr);
+   swapChainFramebuffers.clear();
+
+   for (auto& img : swapChainImages)
+   {
+      if (img.imageView != VK_NULL_HANDLE)
+         vkDestroyImageView(mainDevice.logicalDevice, img.imageView, nullptr);
+
+      img.imageView = VK_NULL_HANDLE;
+   }
+   swapChainImages.clear();
+
+   if (VK_NULL_HANDLE != swapChain)
+      vkDestroySwapchainKHR(mainDevice.logicalDevice, swapChain, nullptr);
+
+   swapChain = VK_NULL_HANDLE;
+}
+
+void VulkanRenderer::initAfterResize()
+{
+   swapchainDetails = getSwapchainDetails(mainDevice.physicalDevice, surface);
+   createSwapChain();
+   createGraphicsPipeline();
+   createDepthBuffer();
+   createColorBuffer();
+   createFrameBuffers();
+   createSubPassBInputDescriptorSet();
+}
+
+void VulkanRenderer::resized()
+{
+   vkDeviceWaitIdle(mainDevice.logicalDevice);
+   cleanupAfterResize();
+   initAfterResize();
+}
+
 int VulkanRenderer::init(GLFWwindow* window, bool useFixedCommandBufferRecordings)
 {
    this->window = window;
@@ -268,6 +338,12 @@ void VulkanRenderer::cleanup()
 
 void VulkanRenderer::draw()
 {
+   int width = 0;
+   int height = 0;
+   glfwGetWindowSize(window, &width, &height);
+   if (width == 0 || height == 0)
+      return;
+
    //TODO recreate swapchain and framebuffers if needed here if the results are invalid
 
    if (VK_SUCCESS != vkWaitForFences(mainDevice.logicalDevice, 1, &drawFences[currentFrame % MAX_NUMBER_OF_PROCCESSED_FRAMES_INFLIGHT], VK_TRUE, UINT64_MAX))
@@ -283,6 +359,12 @@ void VulkanRenderer::draw()
       imagesAvailable[currentFrame % MAX_NUMBER_OF_PROCCESSED_FRAMES_INFLIGHT], 
       VK_NULL_HANDLE, 
       &imageIndex);
+
+   if (aquieredImage == VK_ERROR_OUT_OF_DATE_KHR)
+   {
+      resized();
+      return;
+   }
 
    updateUniformBuffers(imageIndex);
    if (!useFixedCommandBufferRecordings)
@@ -320,6 +402,13 @@ void VulkanRenderer::draw()
    ++currentFrame;
 
    VkResult imagePresented = vkQueuePresentKHR(presentationQueue, &presentInfo);
+
+   if (imagePresented == VK_SUBOPTIMAL_KHR || imagePresented == VK_ERROR_OUT_OF_DATE_KHR)
+   {
+      resized();
+      return;
+   }
+
    if (VK_SUCCESS != imagePresented)
       throw std::runtime_error("Unable to present image");
 }
