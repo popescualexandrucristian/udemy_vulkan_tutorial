@@ -5,6 +5,10 @@
 
 ## Progress
 
+### Mar 10, 2022 Add a second sub-pass, the first pass stores the color and the depth and the second pass displayes on half of the screen the color pass and on half the depth pass
+![9ac2d3a90fd7f7a7cc3352965246224eee05e31b](https://github.com/popescualexandrucristian/udemy_vulkan_tutorial/blob/master/documentation/9ac2d3a90fd7f7a7cc3352965246224eee05e31b.jpg?raw=true)
+[https://github.com/popescualexandrucristian/udemy_vulkan_tutorial/commit/9ac2d3a90fd7f7a7cc3352965246224eee05e31b](https://github.com/popescualexandrucristian/udemy_vulkan_tutorial/commit/9ac2d3a90fd7f7a7cc3352965246224eee05e31b)
+
 ### Mar 9, 2022 Add model loading support
 ![a4d95cee27e5b7e72053c393d3a720f3e2266bc5](https://github.com/popescualexandrucristian/udemy_vulkan_tutorial/blob/master/documentation/a4d95cee27e5b7e72053c393d3a720f3e2266bc5.jpg?raw=true)
 [https://github.com/popescualexandrucristian/udemy_vulkan_tutorial/commit/a4d95cee27e5b7e72053c393d3a720f3e2266bc5](https://github.com/popescualexandrucristian/udemy_vulkan_tutorial/commit/a4d95cee27e5b7e72053c393d3a720f3e2266bc5)
