@@ -1,5 +1,43 @@
 # Learning Vulkan
 
+## Summary
+
+The 2022 Autodesk Recharge Sprint gave me the opportunity to go trough an introductory course for Vulkan([link]((https://www.udemy.com/course/learn-the-vulkan-api-with-cpp))).
+I followed the lesson plan and I implemented everything the instructor explained and a little extra.
+
+Thanks Autodesk !
+
+## What I learned
+
+* Create a Vulkan instance, get a physical device, create a logical device, get the physical queues, get the logical queues, setup the validation layers on debug, get the surface, get the swap-chain
+* Create the render passes with sub-passes and dependencies
+* Create the resource descriptor layouts and the graphics pipeline, texture samplers
+* Crete the depth buffer, color frame buffer targets, load texture data, vertex data, index data, uniform buffers, dynamic uniform buffers and push constants on the device
+* Create command pools and command buffers
+* Crete and use Vulkan semaphores, fences and barriers for device-device and device-host synchronization
+* Record command buffers so data can be generated in the frame-buffers
+* Present the generated data to the screen
+* Resize the swap-chain and the screen at runtime
+* Load custom model data with the ASSIMP library
+* Use multiple sub-passes
+
+## Repo usage instructions
+
+* Make sure your video card supports at least Vulkan 1.1(this is what the code was written against)
+* I only provide solutions for visual studio 2019 on windows, but the code is cross-platform(not tested)
+* Install the Vulkan SDK (I worked with version 1.3.204.0 but a newer version should also work as expected)
+* Download this repository from https://github.com/popescualexandrucristian/udemy_vulkan_tutorial.git
+* Open the solution(vulkan_course_app.sln) compile and run it (the resources project should compile the shaders and copy the resources to the output folder and the vulkan_course_app should compile the executable and copy the necessary dlls)
+
+### Notes
+* Only x64 versions of the project are available, but the code should compile on x86
+* Make sure the SDK added an environment variable for it's location VULKAN_SDK, this variable is used to find the library and to compile the shaders
+* If for some reason you need to compile the shaders outside of visual studio they are all located in /shaders and they respect the standard naming conventions, the results should be placed in the same directory as the executable
+* If visual studio is not used all the files from the resources folder should be placed in the same directory as the executable and the following dlls should be also added there /external/glfw/glfw3.dll, external/assimp/assimp-vc140-mt.dll
+* There is an open source extension for visual studio https://github.com/danielscherzer/GLSL also offered directly from the Microsoft Visual Studio extension marketplace https://marketplace.visualstudio.com/items?itemName=DanielScherzer.GLSL it offers full support for GLSL on Vulkan, the user just has to add "-V" for the "Arguments for the external compiler executable" and an absolute path for glslangValidator in the "External compiler executable file path (without quotes)", otherwise it will not work with the Vulkan specific stuff
+* There is a great free and open source graphics application debugger called RenderDoc(https://github.com/baldurk/renderdoc) it looks and feels like Pix from Direct3D 9, but it can work with Vulkan, OpenGl, OpenCL and Direct3D, it saved me a lot of time and I fully recommend it
+* For a complete list of the external libs that I use see the "External libs" section, all of them are cross-platform, but for GLFW and ASSIM I only provide the windows versions in this repository, they are easy to recompile on any platform
+
 ## Course
 [https://www.udemy.com/course/learn-the-vulkan-api-with-cpp](https://www.udemy.com/course/learn-the-vulkan-api-with-cpp)
 
@@ -9,8 +47,7 @@
 ![e26985e5dec60b6aa59a79c19f93083d0e774330](https://github.com/popescualexandrucristian/udemy_vulkan_tutorial/blob/master/documentation/01dd01b26a3634e5ffc64a7cea3d346d55adbf47.jpg?raw=true)
 [https://github.com/popescualexandrucristian/udemy_vulkan_tutorial/commit/e26985e5dec60b6aa59a79c19f93083d0e774330](https://github.com/popescualexandrucristian/udemy_vulkan_tutorial/commit/e26985e5dec60b6aa59a79c19f93083d0e774330)
 
-
-### Mar 10, 2022 Add a second sub-pass, the first pass stores the color and the depth and the second pass displayes on half of the screen the color pass and on half the depth pass
+### Mar 10, 2022 Add a second sub-pass, the first pass stores the color and the depth and the second pass will display on half of the screen the color pass and on half the depth pass
 ![9ac2d3a90fd7f7a7cc3352965246224eee05e31b](https://github.com/popescualexandrucristian/udemy_vulkan_tutorial/blob/master/documentation/9ac2d3a90fd7f7a7cc3352965246224eee05e31b.jpg?raw=true)
 [https://github.com/popescualexandrucristian/udemy_vulkan_tutorial/commit/9ac2d3a90fd7f7a7cc3352965246224eee05e31b](https://github.com/popescualexandrucristian/udemy_vulkan_tutorial/commit/9ac2d3a90fd7f7a7cc3352965246224eee05e31b)
 
